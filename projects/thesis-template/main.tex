@@ -1,0 +1,143 @@
+% Modèle de mémoire / thèse -- projet de démonstration
+% Classe KOMA-Script scrbook, babel (français + anglais), biblatex + biber, pgfplots, TikZ.
+% Le contenu mathématique est classique ; noms, université et jury sont des exemples à remplacer.
+% Compilation : latexmk -pdf main.tex
+\documentclass[a4paper,11pt,twoside,openany,BCOR=7mm,DIV=12,headings=small,numbers=noenddot,parskip=false]{scrbook}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,main=french]{babel}
+\usepackage{csquotes}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{newpxtext,newpxmath}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\sisetup{locale=FR}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,decorations.pathreplacing}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{listings}
+\usepackage[style=alphabetic,backend=biber,giveninits=true,doi=false,isbn=false,url=false]{biblatex}
+\addbibresource{refs.bib}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{scrlayer-scrpage}
+\usepackage[colorlinks=true,linkcolor=wine,citecolor=wine,urlcolor=wine,pdftitle={Méthodes numériques pour les équations différentielles ordinaires},pdfauthor={Prénom Nom}]{hyperref}
+\usepackage[nameinlink]{cleveref}
+
+% ------------------------------------------------------------------ couleurs
+\definecolor{wine}{HTML}{7F1D1D}
+\definecolor{ink}{HTML}{1C1917}
+\definecolor{sea}{HTML}{1D4E89}
+\definecolor{moss}{HTML}{2F6B3A}
+\definecolor{ochre}{HTML}{B7791F}
+\definecolor{sand}{HTML}{F3ECDA}
+\definecolor{line}{HTML}{DDD2B8}
+
+% ------------------------------------------------------------------ titres
+\renewcommand*{\chapterformat}{\mbox{\color{wine}\fontsize{46}{46}\selectfont\thechapter}\enskip{\color{line}\rule[-0.5ex]{0.9pt}{3.4ex}}\enskip}
+\setkomafont{chapter}{\normalfont\huge\bfseries}
+\setkomafont{section}{\normalfont\Large\bfseries}
+\setkomafont{subsection}{\normalfont\large\bfseries}
+\setkomafont{descriptionlabel}{\normalfont\bfseries}
+\addtokomafont{chapterprefix}{\color{wine}}
+\setkomafont{captionlabel}{\bfseries\color{wine}}
+\captionsetup{font=small,labelsep=period}
+
+% ------------------------------------------------------------------ en-têtes
+\automark[section]{chapter}
+\clearpairofpagestyles
+\lehead{\pagemark\quad\headmark}
+\rohead{\headmark\quad\pagemark}
+\cfoot*{\pagemark}
+\KOMAoptions{headsepline=true}
+\setkomafont{pageheadfoot}{\normalfont\small\itshape}
+\setkomafont{pagenumber}{\normalfont\small\bfseries\upshape}
+\setkomafont{headsepline}{\color{line}}
+\renewcommand*{\chapterpagestyle}{plain.scrheadings}
+\pagestyle{scrheadings}
+
+% ------------------------------------------------------------------ théorèmes
+\theoremstyle{plain}
+\newtheorem{theoreme}{Théorème}[chapter]
+\newtheorem{proposition}[theoreme]{Proposition}
+\newtheorem{corollaire}[theoreme]{Corollaire}
+\theoremstyle{definition}
+\newtheorem{definition}[theoreme]{Définition}
+\newtheorem{exemple}[theoreme]{Exemple}
+\theoremstyle{remark}
+\newtheorem{remarque}[theoreme]{Remarque}
+\crefname{theoreme}{théorème}{théorèmes}
+\crefname{proposition}{proposition}{propositions}
+\crefname{corollaire}{corollaire}{corollaires}
+\crefname{definition}{définition}{définitions}
+\crefname{exemple}{exemple}{exemples}
+\crefname{remarque}{remarque}{remarques}
+\crefname{chapter}{chapitre}{chapitres}
+\crefname{section}{section}{sections}
+\crefname{figure}{figure}{figures}
+\crefname{table}{tableau}{tableaux}
+\crefname{appendix}{annexe}{annexes}
+
+% ------------------------------------------------------------------ raccourcis
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\norm}[1]{\lVert #1\rVert}
+\newcommand{\dd}{\mathrm{d}}
+
+% ------------------------------------------------------------------ code source
+\lstset{
+  basicstyle=\ttfamily\small, keywordstyle=\bfseries\color{wine}, commentstyle=\itshape\color{ink!60},
+  stringstyle=\color{sea}, language=Python, frame=single, rulecolor=\color{line},
+  backgroundcolor=\color{sand!50}, numbers=left, numberstyle=\tiny\color{ink!50}, xleftmargin=1.6em,
+  showstringspaces=false, columns=fullflexible, keepspaces=true,
+}
+
+% ------------------------------------------------------------------ style des graphiques
+\pgfplotsset{
+  these/.style={
+    width=0.92\linewidth, height=6.2cm, font=\footnotesize,
+    tick label style={font=\scriptsize}, label style={font=\footnotesize},
+    axis line style={ink!70}, tick style={ink!70},
+    grid=major, grid style={line!70, line width=0.3pt},
+    legend style={font=\scriptsize, fill=white, fill opacity=0.9, draw=line, text opacity=1, cells={anchor=west}},
+    every axis plot/.append style={thick},
+  },
+}
+
+\setlength{\emergencystretch}{2em}
+
+\begin{document}
+
+\frontmatter
+\pagestyle{empty}
+\input{frontmatter/titlepage}
+\cleardoublepage
+\pagestyle{plain.scrheadings}
+\input{frontmatter/remerciements}
+\input{frontmatter/resume}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\mainmatter
+\pagestyle{scrheadings}
+\input{chapters/introduction}
+\input{chapters/ch1-edo}
+\input{chapters/ch2-methodes}
+\input{chapters/ch3-experiences}
+\input{chapters/conclusion}
+
+\appendix
+\input{chapters/annexes}
+
+\backmatter
+\printbibliography[heading=bibintoc,title={Bibliographie}]
+
+\end{document}

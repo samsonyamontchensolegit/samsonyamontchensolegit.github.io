@@ -1,0 +1,21 @@
+\chapter*{Introduction générale}
+\addcontentsline{toc}{chapter}{Introduction générale}
+\markboth{Introduction générale}{Introduction générale}
+
+Les équations différentielles ordinaires (EDO) interviennent dans la modélisation de nombreux phénomènes : dynamique des populations, mécanique, circuits électriques, cinétique chimique. Dans la grande majorité des cas, leur solution ne s'exprime pas à l'aide de fonctions usuelles, et l'on doit recourir à des méthodes numériques pour l'approcher.
+
+Les premières méthodes de ce type remontent à Euler~\cite{euler1768}. Elles ont été considérablement améliorées par Runge, Heun et Kutta~\cite{runge1895,heun1900,kutta1901}, dont les schémas restent aujourd'hui au c\oe ur de la plupart des logiciels de calcul scientifique. La théorie moderne de leur convergence est exposée dans plusieurs ouvrages de référence~\cite{hairer1993,butcher2016,suli2003,atkinson2009}.
+
+\paragraph{Objectifs.}
+Ce mémoire poursuit trois objectifs :
+\begin{enumerate}[label=(\roman*),itemsep=2pt]
+  \item rappeler le cadre théorique du problème de Cauchy et illustrer son intérêt sur le modèle proie-prédateur de Lotka et Volterra~\cite{lotka1925,volterra1926} ;
+  \item présenter trois méthodes à un pas (Euler, Heun, Runge--Kutta d'ordre~4) et démontrer un théorème de convergence avec estimation de l'erreur globale ;
+  \item confronter la théorie à des expériences numériques : ordres de convergence observés, coût de calcul, comportement sur un système non linéaire.
+\end{enumerate}
+
+\paragraph{Plan du mémoire.}
+Le \cref{ch-edo} rappelle le problème de Cauchy, le théorème de Cauchy--Lipschitz et le modèle proie-prédateur. Le \cref{ch-methodes} introduit les méthodes à un pas, les notions de consistance et d'ordre, démontre le théorème de convergence et discute la stabilité absolue. Le \cref{ch-exp} présente les résultats numériques. Une conclusion propose quelques perspectives. Les tableaux de Butcher et un exemple de code figurent en annexe.
+
+\paragraph{Données et reproductibilité.}
+Toutes les données numériques de ce mémoire sont calculées et non mesurées. Les fichiers \texttt{convergence.csv} et \texttt{predator\_prey.csv}, fournis avec les sources, sont lus directement par \LaTeX{} pour tracer les graphiques.

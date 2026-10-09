@@ -1,0 +1,4 @@
+method,steps,evals
+Euler,1359469,1359469
+Heun,673,1346
+RK4,13,52

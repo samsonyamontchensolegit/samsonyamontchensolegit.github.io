@@ -1,0 +1,130 @@
+\chapter{Expériences numériques}\label{ch-exp}
+
+Ce chapitre confronte les résultats théoriques du \cref{ch-methodes} à des calculs effectués en double précision. Toutes les valeurs proviennent de programmes écrits pour ce mémoire : ce sont des données calculées, non des mesures.
+
+\section{Problème test}\label{sec-exp-test}
+
+Nous considérons l'\cref{ex-exp} avec $\lambda=1$ : $y'=y$, $y(0)=1$ sur $[0,1]$, de solution exacte $y(t)=e^t$ et donc $y(1)=e$. La constante de Lipschitz vaut $L=1$. Pour chaque méthode, nous intégrons avec $h=2^{-k}$, $k=2,\dots,8$, et nous relevons l'erreur $|e-y_N|$ au temps final. L'\emph{ordre observé} entre deux pas consécutifs est
+\[
+  p_{\mathrm{obs}}(h)=\log_2\frac{e(2h)}{e(h)} ,
+\]
+où $e(h)$ désigne l'erreur obtenue avec le pas $h$.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Erreur au temps $t=1$ et ordre observé pour $y'=y$, $y(0)=1$.}\label{tab-erreurs}
+  \footnotesize
+  \begin{tabular}{@{}l
+    S[table-format=1.3e-1] S[table-format=1.2]
+    S[table-format=1.3e-1] S[table-format=1.2]
+    S[table-format=1.3e-2] S[table-format=1.2]@{}}
+    \toprule
+    & \multicolumn{2}{c}{Euler} & \multicolumn{2}{c}{Heun} & \multicolumn{2}{c}{RK4}\\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
+    {$h$} & {erreur} & {ordre} & {erreur} & {ordre} & {erreur} & {ordre}\\
+    \midrule
+    1/4   & 2.769e-1 & {--}  & 2.343e-2 & {--}  & 7.189e-5  & {--}  \\
+    1/8   & 1.525e-1 & 0.86  & 6.441e-3 & 1.86  & 4.984e-6  & 3.85  \\
+    1/16  & 8.035e-2 & 0.92  & 1.688e-3 & 1.93  & 3.281e-7  & 3.93  \\
+    1/32  & 4.129e-2 & 0.96  & 4.322e-4 & 1.97  & 2.105e-8  & 3.96  \\
+    1/64  & 2.094e-2 & 0.98  & 1.093e-4 & 1.98  & 1.333e-9  & 3.98  \\
+    1/128 & 1.054e-2 & 0.99  & 2.749e-5 & 1.99  & 8.384e-11 & 3.99  \\
+    1/256 & 5.290e-3 & 0.99  & 6.893e-6 & 2.00  & 5.261e-12 & 3.99  \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Le \cref{tab-erreurs} montre que les ordres observés tendent vers $1$, $2$ et $4$ lorsque $h$ diminue, en accord avec le \cref{thm-convergence}. La \cref{fig-convergence} présente les mêmes données en échelles logarithmiques : les pentes des droites sont les ordres des méthodes.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+  \begin{loglogaxis}[
+    these, xlabel={pas $h$}, ylabel={erreur en $t=1$},
+    xmin=3e-3, xmax=0.4, ymin=1e-14, ymax=1, legend pos=south east,
+    xtick={0.004,0.0156,0.0625,0.25}, xticklabels={$2^{-8}$,$2^{-6}$,$2^{-4}$,$2^{-2}$},
+    ytick={1e-12,1e-9,1e-6,1e-3,1},
+  ]
+    \addplot[wine,mark=square*,mark size=1.6pt] table[col sep=comma,x=h,y=euler] {convergence.csv};
+    \addlegendentry{Euler ($p=1$)}
+    \addplot[sea,mark=*,mark size=1.6pt] table[col sep=comma,x=h,y=heun] {convergence.csv};
+    \addlegendentry{Heun ($p=2$)}
+    \addplot[moss,mark=triangle*,mark size=2pt] table[col sep=comma,x=h,y=rk4] {convergence.csv};
+    \addlegendentry{RK4 ($p=4$)}
+  \end{loglogaxis}
+  \end{tikzpicture}
+  \caption{Erreur au temps $t=1$ en fonction du pas pour $y'=y$, $y(0)=1$.}\label{fig-convergence}
+\end{figure}
+
+\section{Coût de calcul}\label{sec-exp-cout}
+
+La précision a un prix : Euler demande une évaluation de $f$ par pas, Heun deux et RK4 quatre (\cref{tab-methodes}). Pour atteindre une erreur inférieure à $10^{-6}$ au temps $t=1$, le nombre minimal de pas, déterminé par dichotomie sur la formule exacte de récurrence $y_N=R(h)^N$, est donné dans le \cref{tab-cout}.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Coût pour obtenir une erreur inférieure à $10^{-6}$ sur $y'=y$ en $t=1$.}\label{tab-cout}
+  \small
+  \begin{tabular}{@{}l S[table-format=7.0] S[table-format=7.0]@{}}
+    \toprule
+    Méthode & {Nombre de pas} & {Évaluations de $f$}\\
+    \midrule
+    Euler & 1359469 & 1359469 \\
+    Heun  & 673     & 1346    \\
+    RK4   & 13      & 52      \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+À cette tolérance, RK4 est plus de quatre ordres de grandeur moins coûteuse qu'Euler ($1{,}36\times10^{6}$ évaluations contre $52$), ce qui justifie l'usage de méthodes d'ordre élevé dès que l'on vise une précision modeste.
+
+\section{Le modèle proie-prédateur}\label{sec-exp-lv}
+
+Nous intégrons le système \eqref{eq-lv} avec la méthode RK4, pour les paramètres
+\[
+  \alpha=1,\quad \beta=0{,}1,\quad \gamma=1{,}5,\quad \delta=0{,}075,
+  \qquad (x_0,y_0)=(10,\,5),
+\]
+un pas $\Delta t=0{,}01$ et un temps final $T=30$. Le point d'équilibre est $(x^\ast,y^\ast)=(20,\,10)$.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.49\textwidth}
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+      these, width=\linewidth, height=5.6cm,
+      xlabel={temps $t$}, ylabel={population}, xmin=0, xmax=30, ymin=0, legend pos=north east,
+    ]
+      \addplot[sea,no marks] table[col sep=comma,x=t,y=prey] {predator_prey.csv};
+      \addlegendentry{proies}
+      \addplot[wine,no marks] table[col sep=comma,x=t,y=predator] {predator_prey.csv};
+      \addlegendentry{prédateurs}
+    \end{axis}
+    \end{tikzpicture}
+    \caption{Évolution des populations}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.49\textwidth}
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+      these, width=\linewidth, height=5.6cm,
+      xlabel={proies}, ylabel={prédateurs}, xmin=0, ymin=0, legend pos=north east,
+    ]
+      \addplot[ochre,no marks] table[col sep=comma,x=prey,y=predator] {predator_prey.csv};
+      \addlegendentry{orbite}
+      \addplot[only marks,mark=*,mark size=2.2pt,wine] coordinates {(20,10)};
+      \addlegendentry{équilibre}
+    \end{axis}
+    \end{tikzpicture}
+    \caption{Portrait de phase}
+  \end{subfigure}
+  \caption{Solution du modèle de Lotka--Volterra obtenue avec RK4.}\label{fig-lv}
+\end{figure}
+
+La \cref{fig-lv} montre des oscillations régulières, de période voisine de $5{,}5$ unités de temps : les proies varient entre $7{,}9$ et $40{,}6$ et les prédateurs entre $3{,}1$ et $23{,}3$. Dans le plan de phase, la trajectoire est une courbe fermée autour de l'équilibre, comme l'annonce la \cref{prop-invariant}.
+
+Pour contrôler la qualité du calcul, nous évaluons l'intégrale première $I$ de la \cref{prop-invariant} le long de la trajectoire échantillonnée : sa variation maximale par rapport à la valeur initiale ($I\approx-3{,}8133$) est inférieure à $1{,}2\times10^{-5}$, du même ordre que l'arrondi à quatre décimales des valeurs enregistrées. La méthode RK4 conserve donc très bien cet invariant sur $[0,30]$.
+
+\section{Discussion}\label{sec-discussion}
+
+Les expériences confirment les prédictions théoriques sur deux points : les ordres de convergence observés sont ceux annoncés, et le coût pour une précision donnée diminue fortement avec l'ordre. Elles ne remplacent pas une analyse de la stabilité : sur un problème raide, c'est la condition de la \cref{sec-stabilite} qui imposerait un pas très petit, quelle que soit la précision visée.

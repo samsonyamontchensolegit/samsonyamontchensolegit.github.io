@@ -1,0 +1,13 @@
+\chapter*{Conclusion générale}
+\addcontentsline{toc}{chapter}{Conclusion générale}
+\markboth{Conclusion générale}{Conclusion générale}
+
+Ce mémoire a présenté trois méthodes numériques à un pas pour les équations différentielles ordinaires. Nous avons démontré qu'une méthode consistante d'ordre~$p$, dont la fonction d'incrément est lipschitzienne, converge à l'ordre~$p$, avec une estimation explicite de l'erreur globale. Les expériences sur l'équation test ont confirmé les ordres $1$, $2$ et $4$ et mis en évidence l'écart de coût entre les méthodes ; l'application au modèle de Lotka--Volterra a montré que RK4 conserve l'intégrale première du système avec une grande précision.
+
+\paragraph{Perspectives.}
+Plusieurs prolongements naturels se dégagent :
+\begin{itemize}[itemsep=2pt]
+  \item les méthodes à pas adaptatif, qui estiment l'erreur locale pour ajuster $h$ automatiquement ;
+  \item les méthodes implicites, mieux adaptées aux problèmes raides, dont la stabilité absolue n'est pas limitée comme au \cref{sec-stabilite} ;
+  \item les méthodes géométriques (symplectiques), qui conservent exactement certaines quantités comme l'énergie pour les systèmes hamiltoniens.
+\end{itemize}

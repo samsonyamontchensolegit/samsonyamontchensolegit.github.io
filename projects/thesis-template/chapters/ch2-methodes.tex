@@ -1,0 +1,160 @@
+\chapter{Méthodes numériques à un pas}\label{ch-methodes}
+
+Nous nous plaçons dans le cadre du \cref{ch-edo} : $f$ est continue et lipschitzienne par rapport à $y$, et $y$ désigne l'unique solution du problème de Cauchy \eqref{eq-cauchy}. Ce chapitre présente les méthodes à un pas, leur ordre, et le théorème de convergence qui relie l'ordre local à la précision globale.
+
+\section{Principe général}\label{sec-principe}
+
+Soit $N\in\N^\ast$. On pose $h=(T-t_0)/N$ et $t_n=t_0+nh$ pour $n=0,\dots,N$. Une \emph{méthode à un pas} calcule des approximations $y_n\approx y(t_n)$ par la récurrence
+\begin{equation}\label{eq-onestep}
+  y_{n+1}=y_n+h\,\Phi(t_n,y_n;h),\qquad y_0\ \text{donné},
+\end{equation}
+où $\Phi$ est la \emph{fonction d'incrément}. Le calcul de $y_{n+1}$ n'utilise que $y_n$, d'où le nom de la méthode.
+
+Deux erreurs doivent être distinguées (\cref{fig-erreur-locale}) :
+\begin{itemize}[itemsep=2pt]
+  \item l'\emph{erreur locale}, commise en un pas à partir d'une valeur exacte : $\delta(t;h)=y(t+h)-y(t)-h\,\Phi\bigl(t,y(t);h\bigr)$ ;
+  \item l'\emph{erreur globale}, accumulée sur $n$ pas : $e_n=y(t_n)-y_n$.
+\end{itemize}
+
+\begin{figure}[tb]
+  \centering
+  \begin{tikzpicture}[x=2.6cm,y=0.8cm,>={Stealth[length=2.2mm]}]
+    % axes
+    \draw[->,ink!60] (0,0) -- (3.6,0) node[right] {\small $t$};
+    \draw[->,ink!60] (0,0) -- (0,7.2) node[above] {\small $y$};
+    % solution exacte
+    \draw[thick,sea,domain=0:3.4,samples=50,smooth,variable=\x] plot ({\x},{1+0.6*\x+0.35*\x*\x});
+    \node[sea,right,font=\small] at (3.4,6.9) {$y(t)$};
+    % tangente et pas d'Euler
+    \draw[ochre,dashed,thick] (0.35,{1.95+1.3*(0.35-1)}) -- (1,1.95);
+    \draw[wine,very thick] (1,1.95) -- (2.2,3.51);
+    % repères
+    \draw[ink!50,dotted] (1,0) -- (1,1.95);
+    \draw[ink!50,dotted] (2.2,0) -- (2.2,3.51);
+    \node[below,font=\small] at (1,0) {$t_n$};
+    \node[below,font=\small] at (2.2,0) {$t_{n+1}$};
+    \draw[<->,ink!70] (1,-0.9) -- node[below,font=\small] {$h$} (2.2,-0.9);
+    % points
+    \fill[sea] (1,1.95) circle (2pt) node[above left,font=\small] {$y(t_n)=y_n$};
+    \fill[wine] (2.2,3.51) circle (2pt) node[below right,font=\small] {$y_{n+1}$};
+    \fill[sea] (2.2,4.014) circle (2pt) node[above left,font=\small] {$y(t_{n+1})$};
+    % erreur locale
+    \draw[decorate,decoration={brace,amplitude=4pt,mirror},wine] (2.2,3.51) -- (2.2,4.014);
+    \node[wine,font=\small,align=left,anchor=west] at (2.42,3.76) {erreur locale};
+  \end{tikzpicture}
+  \caption{Un pas de la méthode d'Euler à partir d'un point exact $y(t_n)$ : l'écart entre $y(t_{n+1})$ et $y_{n+1}$ est l'erreur locale $\delta(t_n;h)$.}\label{fig-erreur-locale}
+\end{figure}
+
+\section{Trois méthodes classiques}\label{sec-classiques}
+
+\paragraph{Méthode d'Euler explicite.}
+Le développement de Taylor $y(t+h)=y(t)+h\,y'(t)+O(h^2)$ et l'équation $y'=f(t,y)$ conduisent à $\Phi(t,y;h)=f(t,y)$, soit
+\[
+  y_{n+1}=y_n+h\,f(t_n,y_n).
+\]
+
+\paragraph{Méthode de Heun.}
+Elle remplace la pente en $t_n$ par la moyenne des pentes aux deux extrémités du pas, la valeur en $t_{n+1}$ étant prédite par Euler :
+\[
+  \Phi(t,y;h)=\tfrac12\Bigl[f(t,y)+f\bigl(t+h,\;y+h\,f(t,y)\bigr)\Bigr].
+\]
+
+\paragraph{Méthode de Runge--Kutta d'ordre~4 (RK4).}
+On calcule quatre pentes intermédiaires
+\begin{align*}
+  k_1&=f(t,y), & k_2&=f\bigl(t+\tfrac h2,\;y+\tfrac h2k_1\bigr),\\
+  k_3&=f\bigl(t+\tfrac h2,\;y+\tfrac h2k_2\bigr), & k_4&=f\bigl(t+h,\;y+h\,k_3\bigr),
+\end{align*}
+puis $\Phi(t,y;h)=\tfrac16\,(k_1+2k_2+2k_3+k_4)$. Le tableau de Butcher de cette méthode figure en \cref{app-butcher}. Le \cref{tab-methodes} résume le coût par pas et l'ordre de chacune.
+
+\begin{table}[tb]
+  \centering
+  \caption{Les trois méthodes : coût par pas et ordre.}\label{tab-methodes}
+  \small
+  \begin{tabular}{@{}lcc@{}}
+    \toprule
+    Méthode & Évaluations de $f$ par pas & Ordre $p$\\
+    \midrule
+    Euler explicite & 1 & 1\\
+    Heun            & 2 & 2\\
+    Runge--Kutta classique (RK4) & 4 & 4\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Consistance et ordre}\label{sec-consistance}
+
+\begin{definition}[Consistance d'ordre $p$]\label[definition]{def-consistance}
+La méthode \eqref{eq-onestep} est \emph{consistante d'ordre $p$} s'il existe des constantes $C,h_0>0$ telles que, pour la solution exacte $y$,
+\begin{equation}\label{eq-consistance}
+  \norm{\delta(t;h)}=\norm{y(t+h)-y(t)-h\,\Phi\bigl(t,y(t);h\bigr)}\le C\,h^{p+1}
+\end{equation}
+pour tous $0<h\le h_0$ et $t\in[t_0,T-h]$.
+\end{definition}
+
+\begin{proposition}[Ordre de la méthode d'Euler]\label[proposition]{prop-ordre-euler}
+Si $y$ est de classe $C^2$ et $M=\max_t\norm{y''(t)}$, la méthode d'Euler est consistante d'ordre~$1$ avec $C=M/2$.
+\end{proposition}
+
+\begin{proof}
+Par la formule de Taylor avec reste intégral,
+\[
+  y(t+h)-y(t)-h\,y'(t)=\int_t^{t+h}(t+h-s)\,y''(s)\,\dd s,
+\]
+et la norme de cette quantité est majorée par $M\int_t^{t+h}(t+h-s)\,\dd s=\frac{M}{2}h^2$.
+\end{proof}
+
+Les ordres de Heun et de RK4, égaux à $2$ et $4$, s'obtiennent par un développement de Taylor à des ordres plus élevés ; nous renvoyons à~\cite{hairer1993,butcher2016} pour les détails, qui font intervenir les conditions d'ordre des méthodes de Runge--Kutta.
+
+\section{Convergence}\label{sec-convergence}
+
+\begin{theoreme}[Convergence et erreur globale]\label{thm-convergence}
+Supposons la méthode \eqref{eq-onestep} consistante d'ordre~$p$ et sa fonction d'incrément lipschitzienne par rapport à $y$, de constante $\Lambda>0$, uniformément en $t$ et en $h\le h_0$. Alors, avec $y_0=y(t_0)$, l'erreur globale vérifie
+\begin{equation}\label{eq-erreur-globale}
+  \norm{e_n}\le\frac{C}{\Lambda}\Bigl(e^{\Lambda(t_n-t_0)}-1\Bigr)h^{p}\qquad(0\le n\le N,\ h\le h_0).
+\end{equation}
+En particulier $\max_n\norm{e_n}=O(h^p)$ : la méthode converge à l'ordre~$p$.
+\end{theoreme}
+
+\begin{proof}
+Notons $\delta_n=\delta(t_n;h)$. L'identité $y(t_{n+1})=y(t_n)+h\,\Phi(t_n,y(t_n);h)+\delta_n$, soustraite à \eqref{eq-onestep}, donne
+\[
+  e_{n+1}=e_n+h\bigl[\Phi(t_n,y(t_n);h)-\Phi(t_n,y_n;h)\bigr]+\delta_n .
+\]
+Les hypothèses sur $\Phi$ et \eqref{eq-consistance} entraînent
+\[
+  \norm{e_{n+1}}\le(1+h\Lambda)\norm{e_n}+C\,h^{p+1}.
+\]
+Comme $e_0=0$, une récurrence immédiate fournit
+\[
+  \norm{e_n}\le C\,h^{p+1}\sum_{k=0}^{n-1}(1+h\Lambda)^k
+  =\frac{C\,h^{p}}{\Lambda}\Bigl((1+h\Lambda)^n-1\Bigr).
+\]
+Enfin $(1+h\Lambda)^n\le e^{nh\Lambda}=e^{\Lambda(t_n-t_0)}$, d'où \eqref{eq-erreur-globale}.
+\end{proof}
+
+\begin{corollaire}[Méthode d'Euler]\label[corollaire]{cor-euler}
+Si $y\in C^2$, la méthode d'Euler vérifie
+\[
+  \norm{e_n}\le\frac{M}{2L}\Bigl(e^{L(t_n-t_0)}-1\Bigr)h,
+\]
+où $L$ est la constante de Lipschitz de $f$ et $M=\max_t\norm{y''(t)}$.
+\end{corollaire}
+
+\begin{proof}
+Ici $\Phi=f$, donc $\Lambda=L$ ; la \cref{prop-ordre-euler} donne $p=1$ et $C=M/2$. On applique le \cref{thm-convergence}.
+\end{proof}
+
+\begin{remarque}
+Le facteur $e^{\Lambda(T-t_0)}$ traduit l'amplification maximale des perturbations sur l'intervalle ; la borne est donc pessimiste sur de longs intervalles de temps. L'exposant $p$, en revanche, est celui que l'on observe en pratique (\cref{sec-exp-test}).
+\end{remarque}
+
+\section{Stabilité absolue}\label{sec-stabilite}
+
+Appliquée à l'équation test $y'=\lambda y$ avec $\lambda\in\mathbb{C}$, chacune des trois méthodes s'écrit $y_{n+1}=R(z)\,y_n$ avec $z=h\lambda$, où
+\[
+  R_{\mathrm{Euler}}(z)=1+z,\qquad
+  R_{\mathrm{Heun}}(z)=1+z+\tfrac{z^2}{2},\qquad
+  R_{\mathrm{RK4}}(z)=1+z+\tfrac{z^2}{2}+\tfrac{z^3}{6}+\tfrac{z^4}{24}.
+\]
+La solution numérique reste bornée si et seulement si $|R(z)|\le1$. Pour $\lambda<0$ réel, cette condition impose $h\le 2/|\lambda|$ pour Euler et Heun ; la limite est un peu plus grande pour RK4 (environ $2{,}78/|\lambda|$). C'est cette contrainte de stabilité, et non la précision, qui limite le pas pour les problèmes raides : nous y reviendrons dans les perspectives.

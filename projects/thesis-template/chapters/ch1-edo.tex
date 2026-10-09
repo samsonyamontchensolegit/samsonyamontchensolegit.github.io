@@ -1,0 +1,85 @@
+\chapter{Équations différentielles ordinaires}\label{ch-edo}
+
+Ce chapitre fixe le cadre et les notations utilisés dans la suite. Nous rappelons le problème de Cauchy, le théorème d'existence et d'unicité de Cauchy--Lipschitz, puis nous présentons un modèle non linéaire, celui de Lotka--Volterra, qui servira de fil conducteur.
+
+\section{Le problème de Cauchy}\label{sec-cauchy}
+
+Soient $d\ge 1$ un entier, $[t_0,T]$ un intervalle de $\R$ et $f\colon [t_0,T]\times\R^d\to\R^d$ une fonction continue. Le \emph{problème de Cauchy} consiste à trouver une fonction dérivable $y\colon[t_0,T]\to\R^d$ telle que
+\begin{equation}\label{eq-cauchy}
+  y'(t)=f\bigl(t,y(t)\bigr)\quad\text{pour tout } t\in[t_0,T],\qquad y(t_0)=y_0,
+\end{equation}
+où $y_0\in\R^d$ est la donnée initiale.
+
+\begin{exemple}[Croissance exponentielle]\label[exemple]{ex-exp}
+Pour $d=1$ et $f(t,y)=\lambda y$ avec $\lambda\in\R$, le problème \eqref{eq-cauchy} a pour solution
+\[
+  y(t)=y_0\,e^{\lambda(t-t_0)} .
+\]
+Nous utiliserons le cas $\lambda=1$, $y_0=1$, $t_0=0$ et $T=1$ comme problème test au \cref{ch-exp} : la solution exacte $y(t)=e^{t}$ permet de mesurer précisément l'erreur des méthodes.
+\end{exemple}
+
+\section{Existence et unicité}\label{sec-cl}
+
+\begin{definition}[Fonction lipschitzienne]\label[definition]{def-lipschitz}
+On dit que $f$ est \emph{lipschitzienne par rapport à $y$}, de constante $L\ge0$, si
+\begin{equation}\label{eq-lipschitz}
+  \norm{f(t,u)-f(t,v)}\le L\,\norm{u-v}\qquad\text{pour tous } t\in[t_0,T],\; u,v\in\R^d .
+\end{equation}
+\end{definition}
+
+\begin{theoreme}[Cauchy--Lipschitz]\label{thm-cl}
+Si $f$ est continue et lipschitzienne par rapport à $y$, alors le problème \eqref{eq-cauchy} admet une unique solution définie sur tout l'intervalle $[t_0,T]$.
+\end{theoreme}
+
+\begin{proof}[Idée de la démonstration]
+Une fonction continue $y$ est solution de \eqref{eq-cauchy} si et seulement si elle est point fixe de l'application
+\[
+  (\mathcal{T}y)(t)=y_0+\int_{t_0}^{t} f\bigl(s,y(s)\bigr)\,\dd s
+\]
+sur l'espace $E=C([t_0,T],\R^d)$. Pour $\theta>L$, munissons $E$ de la norme $\norm{y}_\theta=\max_t e^{-\theta(t-t_0)}\norm{y(t)}$, qui est équivalente à la norme uniforme. Pour $y,z$ continues, le caractère lipschitzien donne
+\[
+  e^{-\theta(t-t_0)}\norm{(\mathcal{T}y)(t)-(\mathcal{T}z)(t)}
+  \le L\,\norm{y-z}_\theta\, e^{-\theta(t-t_0)}\int_{t_0}^{t}e^{\theta(s-t_0)}\,\dd s
+  \le \frac{L}{\theta}\,\norm{y-z}_\theta ,
+\]
+donc $\mathcal{T}$ est contractante et le théorème du point fixe de Banach conclut.
+\end{proof}
+
+Dans toute la suite, nous supposons que les hypothèses du \cref{thm-cl} sont satisfaites : le problème \eqref{eq-cauchy} est alors bien posé et la quantité $y(t_n)$ que l'on cherche à approcher est bien définie.
+
+\section{Un modèle non linéaire : proie-prédateur}\label{sec-lv}
+
+Le modèle de Lotka--Volterra~\cite{lotka1925,volterra1926} décrit l'évolution conjointe d'une population de proies $x(t)$ et d'une population de prédateurs $y(t)$ :
+\begin{equation}\label{eq-lv}
+  \begin{cases}
+    x'=\alpha x-\beta xy,\\[2pt]
+    y'=\delta xy-\gamma y,
+  \end{cases}
+  \qquad \alpha,\beta,\gamma,\delta>0 .
+\end{equation}
+Les proies se reproduisent à un taux $\alpha$ et sont consommées proportionnellement au produit $xy$ ; les prédateurs disparaissent à un taux $\gamma$ et se développent grâce aux proies consommées.
+
+Le système \eqref{eq-lv} possède deux points d'équilibre : $(0,0)$ et
+\[
+  (x^\ast,y^\ast)=\Bigl(\frac{\gamma}{\delta},\,\frac{\alpha}{\beta}\Bigr).
+\]
+
+\begin{proposition}[Intégrale première]\label[proposition]{prop-invariant}
+Pour toute solution de \eqref{eq-lv} avec $x,y>0$, la quantité
+\[
+  I(x,y)=\delta x-\gamma\ln x+\beta y-\alpha\ln y
+\]
+est constante au cours du temps.
+\end{proposition}
+
+\begin{proof}
+Par dérivation composée,
+\[
+  \frac{\dd}{\dd t}I(x,y)=\Bigl(\delta-\frac{\gamma}{x}\Bigr)x'+\Bigl(\beta-\frac{\alpha}{y}\Bigr)y'
+  =(\delta x-\gamma)(\alpha-\beta y)+(\beta y-\alpha)(\delta x-\gamma)=0 .\qedhere
+\]
+\end{proof}
+
+\begin{remarque}
+Ce système n'admet pas de solution exprimable avec des fonctions usuelles, mais la \cref{prop-invariant} fournit un moyen de contrôle : les trajectoires sont des courbes fermées autour de $(x^\ast,y^\ast)$, et une méthode numérique de bonne qualité doit conserver $I$ à la précision attendue. Nous utiliserons cette propriété au \cref{sec-exp-lv}.
+\end{remarque}

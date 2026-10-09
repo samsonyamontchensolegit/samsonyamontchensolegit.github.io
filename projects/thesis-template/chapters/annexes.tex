@@ -1,0 +1,45 @@
+\chapter{Tableaux de Butcher}\label[appendix]{app-butcher}
+
+Une méthode de Runge--Kutta à $s$ étages s'écrit $y_{n+1}=y_n+h\sum_{i=1}^{s}b_ik_i$ avec $k_i=f\bigl(t_n+c_ih,\;y_n+h\sum_{j<i}a_{ij}k_j\bigr)$. Ses coefficients $c_i$, $a_{ij}$ et $b_i$ se présentent dans un \emph{tableau de Butcher} : la première colonne contient les $c_i$, le bloc central la matrice $A=(a_{ij})$ et la dernière ligne les poids $b_i$.
+
+\bigskip
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{c@{\hspace{3cm}}c}
+$\begin{array}{c|cc}
+  0 &     &     \\
+  1 & 1   &     \\ \hline
+    & \tfrac12 & \tfrac12
+\end{array}$
+&
+$\begin{array}{c|cccc}
+  0        &          &          &   &   \\
+  \tfrac12 & \tfrac12 &          &   &   \\
+  \tfrac12 & 0        & \tfrac12 &   &   \\
+  1        & 0        & 0        & 1 &   \\ \hline
+           & \tfrac16 & \tfrac13 & \tfrac13 & \tfrac16
+\end{array}$\\[4pt]
+\small Méthode de Heun & \small Méthode RK4 classique
+\end{tabular}
+\end{center}
+
+\chapter{Exemple de code : la méthode RK4}\label[appendix]{app-code}
+
+La fonction suivante intègre un système $y'=f(t,y)$ avec la méthode de Runge--Kutta d'ordre~4 ; elle correspond à la définition du \cref{sec-classiques}.
+
+\begin{lstlisting}[caption={Méthode RK4 en Python (pas constant).},label={lst-rk4}]
+def rk4(f, t0, y0, T, N):
+    """Integre y' = f(t, y) sur [t0, T] avec N pas de taille h."""
+    h = (T - t0) / N
+    t, y = t0, y0
+    ys = [y0]
+    for _ in range(N):
+        k1 = f(t, y)
+        k2 = f(t + h / 2, y + h / 2 * k1)
+        k3 = f(t + h / 2, y + h / 2 * k2)
+        k4 = f(t + h, y + h * k3)
+        y = y + h / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
+        t = t + h
+        ys.append(y)
+    return ys
+\end{lstlisting}

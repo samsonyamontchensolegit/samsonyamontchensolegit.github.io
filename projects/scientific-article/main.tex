@@ -1,0 +1,274 @@
+% Scientific article -- demonstration project (two-column, biblatex, theorems, algorithm, tables)
+% The mathematical content is classical; the author name is a placeholder.
+% Compile with: latexmk -pdf main.tex   (uses biber)
+\documentclass[a4paper,10pt,twocolumn]{article}
+\usepackage[a4paper,top=2.3cm,bottom=2.3cm,inner=1.9cm,outer=1.9cm,columnsep=0.7cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{newpxtext,newpxmath}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{graphicx}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{caption}
+\usepackage{csquotes}
+\usepackage[style=numeric-comp,sorting=nyt,backend=biber,maxbibnames=4,giveninits=true,doi=false,isbn=false,url=false]{biblatex}
+\addbibresource{refs.bib}
+\usepackage[colorlinks=true,linkcolor=wine,citecolor=wine,urlcolor=wine]{hyperref}
+\usepackage[capitalise,nameinlink]{cleveref}
+
+\definecolor{wine}{HTML}{7F1D1D}
+\definecolor{ink}{HTML}{1C1917}
+\definecolor{line}{HTML}{DDD2B8}
+\definecolor{sea}{HTML}{1D4E89}
+\definecolor{moss}{HTML}{2F6B3A}
+
+% Theorem-like environments
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+\crefname{theorem}{Theorem}{Theorems}
+\crefname{figure}{Figure}{Figures}
+\crefname{table}{Table}{Tables}
+\crefname{algocf}{Algorithm}{Algorithms}
+
+% Sectioning
+\titleformat{\section}{\large\bfseries\scshape\color{wine}}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.4ex plus .4ex}{0.8ex}
+\captionsetup{font=small,labelfont={bf,color=wine},labelsep=period}
+
+% Headers and footers
+\setlength{\headheight}{20pt}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{line}\leaders\hrule height \headrulewidth\hfill}}
+\fancyhead[L]{\small\itshape Convergence of explicit one-step methods}
+\fancyhead[R]{\small Sample article}
+\fancyfoot[C]{\small\thepage}
+\fancypagestyle{plain}{\fancyhf{}\renewcommand{\headrulewidth}{0pt}%
+  \fancyfoot[L]{\footnotesize\color{ink!65} Typeset as a demonstration by N'sol\'e Samson Yamontche}%
+  \fancyfoot[R]{\small\thepage}}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\norm}[1]{\lVert #1\rVert}
+\DeclareMathOperator{\eul}{Euler}
+
+\SetKwInOut{Input}{Input}
+\SetKwInOut{Output}{Output}
+
+\title{Convergence of explicit one-step methods:\\ a short proof and a numerical illustration}
+\author{Author Name}
+
+\begin{document}
+
+\twocolumn[{%
+  \begin{center}
+    {\LARGE\bfseries Convergence of explicit one-step methods:\\[2pt] a short proof and a numerical illustration\par}
+    \vspace{10pt}
+    {\large Author Name\textsuperscript{1}\par}
+    \vspace{2pt}
+    {\small\itshape\textsuperscript{1}Department of Mathematics, Example University\par}
+    {\small\texttt{author@example.org}\par}
+  \end{center}
+  \vspace{2pt}
+  {\color{line}\hrule height 0.8pt}
+  \vspace{6pt}
+  \begin{center}
+  \begin{minipage}{0.86\textwidth}
+    \small\textbf{Abstract.}\;
+    We give a compact, self-contained proof that an explicit one-step method of consistency order $p$ converges with global order $p$ for Lipschitz initial value problems. The bound is then compared with numerical experiments for the Euler, Heun and classical Runge--Kutta methods on a linear test equation. The observed orders match the theory, and a cost comparison shows why higher-order methods are preferred at tight tolerances.\\[3pt]
+    \textbf{Keywords:} initial value problems, Runge--Kutta methods, global error, order of convergence
+  \end{minipage}
+  \end{center}
+  \vspace{2pt}
+  {\color{line}\hrule height 0.8pt}
+  \vspace{10pt}
+}]
+
+\section{Introduction}
+Explicit one-step methods for ordinary differential equations go back to Euler~\cite{euler1768} and were extended by Runge, Heun and Kutta~\cite{runge1895,heun1900,kutta1901}. Their convergence theory is classical and is treated in many textbooks~\cite{hairer1993,butcher2016,suli2003,atkinson2009}.
+
+This note has two goals. First, to present the global error estimate in a form that is short enough to be proved in a few lines (\cref{sec:theory}). Second, to check the estimate against computed errors for three standard methods (\cref{sec:numerics}). All figures, tables and the algorithm are typeset in \LaTeX{}~\cite{lamport1994,knuth1984}, and the data behind the plots are computed, not measured.
+
+\section{Setting and notation}\label{sec:setting}
+Let $f\colon[t_0,T]\times\R^d\to\R^d$ be continuous and Lipschitz continuous in its second argument with constant $L$, that is,
+\begin{equation}\label{eq:lipschitz}
+  \norm{f(t,u)-f(t,v)}\le L\,\norm{u-v}.
+\end{equation}
+By the Picard--Lindel\"of theorem the initial value problem
+\begin{equation}\label{eq:ivp}
+  y'(t)=f\bigl(t,y(t)\bigr),\qquad y(t_0)=y_0,
+\end{equation}
+has a unique solution $y$ on $[t_0,T]$. For $N\in\mathbb N$ let $h=(T-t_0)/N$ and $t_n=t_0+nh$. A \emph{one-step method} computes approximations $y_n\approx y(t_n)$ by
+\begin{equation}\label{eq:onestep}
+  y_{n+1}=y_n+h\,\Phi(t_n,y_n;h),\qquad n=0,\dots,N-1,
+\end{equation}
+where $\Phi$ is the increment function. The three methods used below are
+\begin{align}
+  \Phi_{\mathrm{Euler}} &= f(t,y),\\
+  \Phi_{\mathrm{Heun}}  &= \tfrac12\bigl[f(t,y)+f\bigl(t+h,\,y+h f(t,y)\bigr)\bigr],\\
+  \Phi_{\mathrm{RK4}}   &= \tfrac16\,(k_1+2k_2+2k_3+k_4),
+\end{align}
+with the stages $k_1=f(t,y)$, $k_2=f(t+\tfrac h2,y+\tfrac h2k_1)$, $k_3=f(t+\tfrac h2,y+\tfrac h2k_2)$ and $k_4=f(t+h,y+hk_3)$; see \cref{alg:rk4} and Appendix~\ref{app:tableau}.
+
+\begin{definition}[Consistency of order $p$]\label{def:consistency}
+The method \eqref{eq:onestep} is \emph{consistent of order $p$} if there are constants $C,h_0>0$ such that, for the exact solution $y$,
+\begin{equation}\label{eq:consistency}
+  \norm{y(t+h)-y(t)-h\,\Phi\bigl(t,y(t);h\bigr)}\le C\,h^{p+1}
+\end{equation}
+for all $0<h\le h_0$ and $t\in[t_0,T-h]$.
+\end{definition}
+
+\begin{algorithm}[t]
+  \caption{One integration with the classical Runge--Kutta method (RK4)}\label{alg:rk4}
+  \Input{$f$, $t_0$, $y_0$, $T$, number of steps $N$}
+  \Output{approximations $y_0,\dots,y_N$}
+  $h\leftarrow (T-t_0)/N$\;
+  \For{$n\leftarrow 0$ \KwTo $N-1$}{
+    $k_1\leftarrow f(t_n,y_n)$\;
+    $k_2\leftarrow f(t_n+\tfrac h2,\;y_n+\tfrac h2k_1)$\;
+    $k_3\leftarrow f(t_n+\tfrac h2,\;y_n+\tfrac h2k_2)$\;
+    $k_4\leftarrow f(t_n+h,\;y_n+hk_3)$\;
+    $y_{n+1}\leftarrow y_n+\tfrac h6\,(k_1+2k_2+2k_3+k_4)$\;
+    $t_{n+1}\leftarrow t_n+h$\;
+  }
+\end{algorithm}
+
+\begin{table*}[t]
+  \centering
+  \caption{Absolute error at $t=1$ and observed order of convergence for $y'=y$, $y(0)=1$.}\label{tab:errors}
+  \small
+  \begin{tabular}{@{}l
+    S[table-format=1.3e-1] S[table-format=1.2]
+    S[table-format=1.3e-1] S[table-format=1.2]
+    S[table-format=1.3e-2] S[table-format=1.2]@{}}
+    \toprule
+    & \multicolumn{2}{c}{Euler} & \multicolumn{2}{c}{Heun} & \multicolumn{2}{c}{RK4}\\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
+    {$h$} & {error} & {order} & {error} & {order} & {error} & {order}\\
+    \midrule
+    1/4   & 2.769e-1  & {--}  & 2.343e-2 & {--}  & 7.189e-5  & {--}  \\
+    1/8   & 1.525e-1  & 0.86  & 6.441e-3 & 1.86  & 4.984e-6  & 3.85  \\
+    1/16  & 8.035e-2  & 0.92  & 1.688e-3 & 1.93  & 3.281e-7  & 3.93  \\
+    1/32  & 4.129e-2  & 0.96  & 4.322e-4 & 1.97  & 2.105e-8  & 3.96  \\
+    1/64  & 2.094e-2  & 0.98  & 1.093e-4 & 1.98  & 1.333e-9  & 3.98  \\
+    1/128 & 1.054e-2  & 0.99  & 2.749e-5 & 1.99  & 8.384e-11 & 3.99  \\
+    1/256 & 5.290e-3  & 0.99  & 6.893e-6 & 2.00  & 5.261e-12 & 3.99  \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\section{Global error estimate}\label{sec:theory}
+\begin{theorem}\label{thm:global}
+Assume that \eqref{eq:onestep} is consistent of order $p$ and that $\Phi$ is Lipschitz continuous in its second argument with constant $\Lambda>0$, uniformly in $t$ and $h\le h_0$. Then the global error $e_n=y(t_n)-y_n$ satisfies
+\begin{equation}\label{eq:global}
+  \norm{e_n}\le \frac{C}{\Lambda}\Bigl(e^{\Lambda(t_n-t_0)}-1\Bigr)\,h^{p}
+  \qquad(0\le n\le N,\;h\le h_0).
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Subtracting \eqref{eq:onestep} from the identity $y(t_{n+1})=y(t_n)+h\Phi(t_n,y(t_n);h)+\delta_n$, where $\delta_n$ is the local error in \eqref{eq:consistency}, gives
+\[
+  e_{n+1}=e_n+h\bigl[\Phi(t_n,y(t_n);h)-\Phi(t_n,y_n;h)\bigr]+\delta_n .
+\]
+By the Lipschitz condition on $\Phi$ and by \eqref{eq:consistency},
+\[
+  \norm{e_{n+1}}\le(1+h\Lambda)\,\norm{e_n}+C\,h^{p+1}.
+\]
+Since $e_0=0$, induction on $n$ yields
+\[
+  \norm{e_n}\le C\,h^{p+1}\sum_{k=0}^{n-1}(1+h\Lambda)^k
+  =\frac{C\,h^{p}}{\Lambda}\Bigl((1+h\Lambda)^n-1\Bigr).
+\]
+Finally $(1+h\Lambda)^n\le e^{nh\Lambda}=e^{\Lambda(t_n-t_0)}$.
+\end{proof}
+
+\begin{corollary}[Explicit Euler]\label{cor:euler}
+If $y\in C^2([t_0,T])$ and $M=\max_t\norm{y''(t)}$, then for the explicit Euler method
+\[
+  \norm{e_n}\le\frac{M}{2L}\Bigl(e^{L(t_n-t_0)}-1\Bigr)\,h .
+\]
+\end{corollary}
+
+\begin{proof}
+Here $\Phi=f$, so $\Lambda=L$ by \eqref{eq:lipschitz}. Taylor's theorem with integral remainder gives $\norm{y(t+h)-y(t)-hy'(t)}\le\frac{M}{2}h^2$, hence $p=1$ and $C=M/2$. Apply \cref{thm:global}.
+\end{proof}
+
+\begin{remark}
+The factor $e^{\Lambda(T-t_0)}$ reflects the worst-case amplification of perturbations over the whole interval, so the bound is pessimistic on long time horizons. The exponent $p$, however, matches the observed order in the experiments below.
+\end{remark}
+
+\section{Numerical illustration}\label{sec:numerics}
+We take $d=1$, $f(t,y)=y$, $y(0)=1$ and $T=1$, so that $y(t)=e^t$ and $y(1)=e$. For this problem the Euler iterates have the closed form $y_N=(1+h)^N$, and $\Lambda=L=1$. We integrate with $h=2^{-k}$ for $k=2,\dots,8$ in double precision and report $|e-y_N|$.
+
+\Cref{tab:errors} lists the errors and the observed order $\log_2\bigl(e(2h)/e(h)\bigr)$. The orders tend to $1$, $2$ and $4$, as predicted by \cref{thm:global}; \cref{fig:convergence} shows the same data on logarithmic axes, where the slopes are the orders.
+
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}
+  \begin{loglogaxis}[
+    width=\columnwidth, height=5.6cm, font=\footnotesize,
+    xlabel={step size $h$}, ylabel={error at $t=1$},
+    xmin=3e-3, xmax=0.4, ymin=1e-14, ymax=1,
+    grid=major, grid style={line!70,line width=0.3pt},
+    legend pos=south east, legend style={font=\scriptsize,draw=line},
+    xtick={0.004,0.0156,0.0625,0.25}, xticklabels={$2^{-8}$,$2^{-6}$,$2^{-4}$,$2^{-2}$},
+    ytick={1e-12,1e-9,1e-6,1e-3,1}, every axis plot/.append style={thick},
+  ]
+    \addplot[wine,mark=square*,mark size=1.5pt] table[col sep=comma,x=h,y=euler] {convergence.csv};
+    \addlegendentry{Euler ($p=1$)}
+    \addplot[sea,mark=*,mark size=1.5pt] table[col sep=comma,x=h,y=heun] {convergence.csv};
+    \addlegendentry{Heun ($p=2$)}
+    \addplot[moss,mark=triangle*,mark size=2pt] table[col sep=comma,x=h,y=rk4] {convergence.csv};
+    \addlegendentry{RK4 ($p=4$)}
+  \end{loglogaxis}
+  \end{tikzpicture}
+  \caption{Error at $t=1$ versus step size for $y'=y$, $y(0)=1$. The slopes in the log--log plot equal the orders of the methods.}\label{fig:convergence}
+\end{figure}
+
+
+
+\paragraph{Cost.}
+Accuracy has a price: Euler needs one evaluation of $f$ per step, Heun two and RK4 four. To reach an error below $10^{-6}$ the three methods need $1\,359\,469$, $673$ and $13$ steps, that is $1.36\times10^{6}$, $1\,346$ and $52$ evaluations of $f$. At this tolerance RK4 is therefore more than four orders of magnitude cheaper than Euler, in line with the exponent $p$ in \eqref{eq:global}.
+
+\section{Conclusion}
+The global error of an explicit one-step method inherits the consistency order of its increment function, with a constant that grows at most exponentially in the interval length. The experiments confirm the exponents $1$, $2$ and $4$ and illustrate why high-order methods dominate when tight tolerances are required. The same estimate underlies the error control in modern adaptive solvers~\cite{hairer1993}.
+
+\appendix
+\section{Butcher tableaux}\label{app:tableau}
+The classical method RK4 and the method of Heun can be written as Butcher tableaux:
+\[
+\renewcommand{\arraystretch}{1.15}
+\begin{array}{c|cccc}
+  0   &     &     &     &     \\
+  \tfrac12 & \tfrac12 &   &     &     \\
+  \tfrac12 & 0   & \tfrac12 &   &     \\
+  1   & 0   & 0   & 1   &     \\ \hline
+      & \tfrac16 & \tfrac13 & \tfrac13 & \tfrac16
+\end{array}
+\qquad
+\begin{array}{c|cc}
+  0 &     &     \\
+  1 & 1   &     \\ \hline
+    & \tfrac12 & \tfrac12
+\end{array}
+\]
+
+\printbibliography[title={References}]
+
+\end{document}
