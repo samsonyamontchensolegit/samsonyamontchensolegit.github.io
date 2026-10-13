@@ -1,0 +1,791 @@
+% Numerical Integration: A Short Course
+% A complete book-class sample: front matter, chapters, exercises, appendices, bibliography and index.
+\documentclass[11pt,a4paper,twoside,openright]{book}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,inner=3.1cm,outer=2.5cm,top=2.9cm,bottom=2.9cm]{geometry}
+\usepackage{libertinus}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,mathtools,amsthm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,positioning,shapes.geometric,shapes.misc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{algorithmicx,algpseudocode}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{emptypage}
+\usepackage[font=small,labelfont=bf,format=hang]{caption}
+\usepackage{subcaption}
+\usepackage{makeidx}
+\makeindex
+\usepackage[backend=biber,style=authoryear,sorting=nyt,maxbibnames=4,uniquename=false,uniquelist=false]{biblatex}
+\addbibresource{references.bib}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black,bookmarksnumbered]{hyperref}
+
+% ------------------------------------------------------------------ colours and macros
+\definecolor{navy}{HTML}{0B2545}
+\definecolor{tealc}{HTML}{13A89E}
+\definecolor{amberc}{HTML}{F4B942}
+\definecolor{coral}{HTML}{E4572E}
+\DeclareMathOperator{\erf}{erf}
+\newcommand{\dd}{\,\mathrm{d}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\abs}[1]{\lvert #1\rvert}
+
+% ------------------------------------------------------------------ chapter and section styles
+\titleformat{\chapter}[display]
+  {\bfseries}
+  {\raggedleft\color{tealc}\fontsize{70}{70}\selectfont\thechapter}
+  {-16pt}
+  {\raggedright\huge\color{navy}}
+  [\vspace{4pt}{\color{tealc}\titlerule[1.3pt]}]
+\titleformat{name=\chapter,numberless}[display]
+  {\bfseries}{}{0pt}{\raggedright\huge\color{navy}}
+  [\vspace{4pt}{\color{tealc}\titlerule[1.3pt]}]
+\titlespacing*{\chapter}{0pt}{10pt}{34pt}
+\titleformat{\section}{\Large\bfseries\color{navy}}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\large\bfseries\color{navy}}{\thesubsection}{0.7em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+\fancyhead[LE]{\small\thepage\quad\textsc{\nouppercase{\leftmark}}}
+\fancyhead[RO]{\small\textsc{\nouppercase{\rightmark}}\quad\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+\setlist{itemsep=2pt,topsep=4pt}
+
+% ------------------------------------------------------------------ theorem-like boxes
+\tcbset{bookbox/.style={enhanced,breakable,boxrule=0.5pt,arc=2pt,left=7pt,right=7pt,top=5pt,bottom=5pt,
+  before skip=11pt,after skip=11pt,coltitle=white,fonttitle=\bfseries}}
+\newtcbtheorem[number within=chapter]{theorem}{Theorem}{bookbox,colback=navy!5,colframe=navy}{thm}
+\newtcbtheorem[use counter from=theorem]{definition}{Definition}{bookbox,colback=tealc!7,colframe=tealc!80!black}{def}
+\newtcbtheorem[use counter from=theorem]{example}{Example}{bookbox,colback=amberc!12,colframe=amberc!80!black}{exa}
+
+% exercises, numbered within chapters
+\newcounter{exo}[chapter]
+\renewcommand{\theexo}{\thechapter.\arabic{exo}}
+\newenvironment{exo}
+  {\par\medskip\refstepcounter{exo}\noindent\textbf{\color{navy}Exercise~\theexo.}\ }
+  {\par\medskip}
+
+% ------------------------------------------------------------------ code
+\lstset{language=Python,basicstyle=\ttfamily\small,keywordstyle=\color{tealc!70!black}\bfseries,
+  commentstyle=\color{gray}\itshape,stringstyle=\color{coral},showstringspaces=false,
+  frame=single,rulecolor=\color{navy!25},backgroundcolor=\color{navy!3},numbers=left,
+  numberstyle=\tiny\color{gray},xleftmargin=1.6em,columns=fullflexible,aboveskip=10pt,belowskip=6pt}
+\algrenewcommand\algorithmicrequire{\textbf{Input:}}
+
+% ------------------------------------------------------------------ plots
+\pgfplotsset{
+  bookaxis/.style={width=\linewidth,tick label style={font=\scriptsize},label style={font=\small},
+    grid=both,grid style={gray!22},axis lines=left},
+}
+% Riemann boxes for exp(-x^2) on [0,1]: #1 = n, #2 = sample point inside each cell (0, 1/2 or 1), #3 = plot options
+\newcommand{\riemannboxes}[3]{%
+  \pgfmathtruncatemacro{\nm}{#1-1}%
+  \foreach \i in {0,...,\nm}{%
+    \pgfmathsetmacro{\xa}{\i/#1}\pgfmathsetmacro{\xb}{(\i+1)/#1}\pgfmathsetmacro{\xc}{(\i+#2)/#1}%
+    \pgfmathsetmacro{\yc}{exp(-\xc*\xc)}%
+    \addplot[#3] coordinates {(\xa,0) (\xa,\yc) (\xb,\yc) (\xb,0)} \closedcycle;%
+  }}
+
+\title{Numerical Integration}
+\author{N'sol\'e Samson Yamontche}
+
+\begin{document}
+
+% ================================================================== front matter
+\frontmatter
+\pagestyle{empty}
+
+% half title
+\begin{titlepage}
+  \vspace*{0.30\textheight}
+  \begin{center}
+    {\Huge\bfseries\color{navy} Numerical Integration\par}
+    \vspace{0.4cm}
+    {\large\color{tealc!70!black} A Short Course\par}
+  \end{center}
+\end{titlepage}
+\cleardoublepage
+
+% title page
+\begin{titlepage}
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[navy] (current page.north west) rectangle ([yshift=-0.5\paperheight]current page.north east);
+    \draw[white,opacity=0.06,step=1cm] (current page.north west) grid ([yshift=-0.5\paperheight]current page.north east);
+    \begin{scope}[shift={($(current page.north west)+(2.0cm,-13.4cm)$)},xscale=1.05,yscale=0.9]
+      \foreach \i in {0,...,7}{%
+        \pgfmathsetmacro{\xa}{\i*1.55}\pgfmathsetmacro{\xb}{(\i+1)*1.55}%
+        \pgfmathsetmacro{\ya}{4.2*exp(-(\i/6)^2)}\pgfmathsetmacro{\yb}{4.2*exp(-((\i+1)/6)^2)}%
+        \fill[tealc,opacity=0.25] (\xa,0) -- (\xa,\ya) -- (\xb,\yb) -- (\xb,0) -- cycle;
+        \draw[tealc,opacity=0.8] (\xa,0) -- (\xa,\ya) -- (\xb,\yb) -- (\xb,0);}
+      \draw[amberc,very thick,domain=0:12.4,samples=80] plot (\x,{4.2*exp(-(\x/9.3)^2)});
+    \end{scope}
+    \node[anchor=south west,white,text width=0.8\paperwidth] at ([xshift=2.2cm,yshift=-8.0cm]current page.north west)
+      {\raggedright{\fontsize{44}{48}\selectfont\bfseries Numerical\\Integration\par}%
+       \vspace{0.3cm}{\Large\color{tealc!60!white}A Short Course\par}%
+       \vspace{0.2cm}{\large\color{white!80!navy}From Riemann Sums to Gaussian Quadrature\par}};
+  \end{tikzpicture}
+  \vfill
+  \begin{center}
+    {\Large\bfseries\color{navy} N'sol\'e Samson Yamontche\par}
+    \vspace{0.2cm}{\small\color{navy!70}\texttt{samsonyamontchensolegit.github.io}\par}
+    \vspace{0.6cm}{\normalsize 2026\par}
+  \end{center}
+\end{titlepage}
+\cleardoublepage
+
+% copyright page
+\thispagestyle{empty}
+\vspace*{\fill}
+\begin{small}
+\noindent Copyright \copyright{} 2026 N'sol\'e Samson Yamontche.\\[4pt]
+This book is a typesetting sample. It was produced entirely with \LaTeX{} (pdf\LaTeX, \texttt{book} class, TikZ, \texttt{pgfplots}, \texttt{biblatex} and \texttt{makeindex}).
+All tables and numerical results are computed by the script \texttt{book\_data.py} distributed with the source files.\\[4pt]
+First edition, October 2026.
+\end{small}
+\cleardoublepage
+
+% dedication
+\thispagestyle{empty}
+\vspace*{0.25\textheight}
+\begin{center}
+  \itshape To the students who ask why the area under a curve\\ cannot always be computed exactly,\\ and then go on to compute it anyway.
+\end{center}
+\cleardoublepage
+
+\pagestyle{fancy}
+\chapter*{Preface}
+\markboth{Preface}{Preface}
+\addcontentsline{toc}{chapter}{Preface}
+Integrals are everywhere, but exact antiderivatives are rare.
+This short book is a self-contained introduction to the numerical evaluation of definite integrals in one dimension.
+It starts from the simplest idea, a sum of areas of rectangles, and ends with two of the most useful tools of numerical analysis: Gaussian quadrature and adaptive quadrature.
+
+The book follows one running example, the integral
+\[
+  I=\int_0^1 e^{-x^{2}}\dd x\approx 0.7468241328,
+\]
+which has no elementary antiderivative but is perfectly suited to experiments.
+The experiments are reproducible: every table and data file is generated by a short Python script, and the numbers quoted in the text are taken from its output.
+
+\paragraph{How to read this book.}
+Chapter~\ref{ch:intro} introduces quadrature rules and the notions of degree of exactness and order of convergence.
+Chapter~\ref{ch:newton} studies the Newton--Cotes rules, with error estimates and extrapolation.
+Chapter~\ref{ch:gauss} presents Gaussian quadrature.
+Chapter~\ref{ch:practice} deals with practical questions: rounding errors, adaptive algorithms and the choice of a method.
+Exercises are collected at the end of each chapter, and solutions to all of them are given in Appendix~\ref{app:solutions}.
+
+\paragraph{A note on this edition.}
+This is also a demonstration of professional book typesetting with \LaTeX{}: running headers, theorem boxes, numbered exercises, cross-references, a bibliography and an index are all generated automatically.
+
+\bigskip
+\hfill N.\,S.\,Y.\\
+\hfill\textit{Natitingou, October 2026}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+% ================================================================== main matter
+\mainmatter
+
+% ------------------------------------------------------------------ Chapter 1
+\chapter{Why Integrate Numerically?}\label{ch:intro}
+
+\section{Integrals without closed forms}
+The fundamental theorem of calculus tells us to compute $\int_a^b f(x)\dd x$ by finding an antiderivative $F$ and evaluating $F(b)-F(a)$.
+This works for polynomials, for $\sin$, $\exp$ and many more functions, but it fails far more often than introductory courses suggest.
+By a theorem of Liouville, the function $e^{-x^{2}}$ has no antiderivative that can be written with elementary functions.\index{Liouville's theorem}
+The same is true of $\sin(x)/x$ and of the integrands that define elliptic integrals.
+
+One can give the missing antiderivative a name: the \emph{error function}\index{error function}
+\[
+  \erf(x)=\frac{2}{\sqrt\pi}\int_0^x e^{-t^{2}}\dd t .
+\]
+But this only moves the problem: to obtain a number such as $\erf(1)$, one still has to approximate an integral.
+Numerical integration, also called \emph{quadrature}, is therefore a basic tool of scientific computing.
+It is also needed when $f$ is known only through measurements, that is, through a table of values.
+
+\begin{example}{The running example}{running}
+Throughout this book we use
+\[
+  I=\int_0^1 e^{-x^{2}}\dd x=\frac{\sqrt\pi}{2}\erf(1)\approx 0.7468241328 .
+\]
+The exact value is known to many digits, so that we can measure the error of every method.
+\end{example}
+
+\section{Quadrature rules and degree of exactness}
+\begin{definition}{Quadrature rule}{rule}
+A \emph{quadrature rule}\index{quadrature rule} with $m$ \emph{nodes}\index{nodes} $x_1,\dots,x_m\in[a,b]$ and \emph{weights}\index{weights} $w_1,\dots,w_m$ is the approximation
+\[
+  Q(f)=\sum_{i=1}^{m} w_i\,f(x_i)\approx\int_a^b f(x)\dd x .
+\]
+Its \emph{degree of exactness}\index{degree of exactness} is the largest integer $d$ such that $Q(p)=\int_a^b p$ for every polynomial $p$ of degree at most $d$.
+\end{definition}
+
+The simplest rules are the Riemann sums. Let $h=(b-a)/n$ and $x_i=a+ih$. The \emph{left}, \emph{right} and \emph{midpoint} sums\index{Riemann sums}\index{midpoint rule} are
+\begin{equation}
+  L_n=h\sum_{i=0}^{n-1}f(x_i),\qquad
+  R_n=h\sum_{i=1}^{n}f(x_i),\qquad
+  M_n=h\sum_{i=0}^{n-1}f\!\left(x_i+\tfrac h2\right).
+  \label{eq:riemann}
+\end{equation}
+Figure~\ref{fig:riemann} shows the three rules for $n=4$ on the running example.
+The left and right sums have degree of exactness $0$ (they are exact for constants only); the midpoint sum has degree of exactness $1$ (Exercise~\ref{exo:midpoint}).
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.32\textwidth}
+    \centering
+    \begin{tikzpicture}\begin{axis}[bookaxis,height=0.95\linewidth,xmin=0,xmax=1.05,ymin=0,ymax=1.12,xtick={0,0.5,1},ytick={0,0.5,1}]
+      \riemannboxes{4}{0}{draw=tealc!70!black,fill=tealc!22}
+      \addplot[navy,very thick,domain=0:1,samples=60] {exp(-x^2)};
+    \end{axis}\end{tikzpicture}
+    \caption{Left sum $L_4$.}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \centering
+    \begin{tikzpicture}\begin{axis}[bookaxis,height=0.95\linewidth,xmin=0,xmax=1.05,ymin=0,ymax=1.12,xtick={0,0.5,1},ytick={0,0.5,1}]
+      \riemannboxes{4}{1}{draw=coral!80!black,fill=coral!20}
+      \addplot[navy,very thick,domain=0:1,samples=60] {exp(-x^2)};
+    \end{axis}\end{tikzpicture}
+    \caption{Right sum $R_4$.}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \centering
+    \begin{tikzpicture}\begin{axis}[bookaxis,height=0.95\linewidth,xmin=0,xmax=1.05,ymin=0,ymax=1.12,xtick={0,0.5,1},ytick={0,0.5,1}]
+      \riemannboxes{4}{0.5}{draw=amberc!80!black,fill=amberc!28}
+      \addplot[navy,very thick,domain=0:1,samples=60] {exp(-x^2)};
+    \end{axis}\end{tikzpicture}
+    \caption{Midpoint sum $M_4$.}
+  \end{subfigure}
+  \caption{Three Riemann sums for $e^{-x^{2}}$ on $[0,1]$ with $n=4$ cells.}
+  \label{fig:riemann}
+\end{figure}
+
+\section{Measuring convergence}
+Let $E_n=\abs{I-Q_n}$ be the error of a rule using $n$ cells of width $h=(b-a)/n$.
+We say that the rule has \emph{order}\index{order of convergence} $p$ if $E_n\approx C h^{p}$ for some constant $C$ as $h\to0$.
+If we double $n$, the error is divided by about $2^{p}$, so that
+\begin{equation}
+  p\approx\log_2\frac{E_n}{E_{2n}} .
+  \label{eq:order}
+\end{equation}
+Table~\ref{tab:riemann} gives the errors of the three Riemann sums on the running example.
+From $n=16$ to $n=32$, the left sum improves by a factor $1.95/0.982\approx1.99$, hence $p\approx1$; the midpoint sum improves by a factor $1.20\cdot10^{-4}/2.99\cdot10^{-5}\approx 4.0$, hence $p\approx2$.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Absolute errors of the Riemann sums for $\int_0^1 e^{-x^{2}}\dd x$.}
+  \label{tab:riemann}
+  \input{table-riemann.tex}
+\end{table}
+
+Order alone does not tell the whole story, because the constant $C$ also matters; but it describes how fast a method becomes accurate when the work is increased.
+The goal of the next chapters is to find rules of much higher order.
+
+\section*{Exercises}
+\addcontentsline{toc}{section}{Exercises}
+\begin{exo}\label{exo:midpoint}
+Show that the one-cell midpoint rule $M(f)=(b-a)f\bigl(\tfrac{a+b}{2}\bigr)$ has degree of exactness exactly~$1$.
+\end{exo}
+\begin{exo}\label{exo:order}
+Use Table~\ref{tab:riemann} and formula~\eqref{eq:order} to estimate the order of the right sum $R_n$ from $n=8$ to $n=16$ and from $n=16$ to $n=32$.
+\end{exo}
+\begin{exo}\label{exo:monotone}
+Show that if $f$ is increasing on $[a,b]$, then $L_n\le I\le R_n$. What changes for the decreasing function $e^{-x^{2}}$?
+\end{exo}
+
+% ------------------------------------------------------------------ Chapter 2
+\chapter{Newton--Cotes Rules}\label{ch:newton}
+
+\section{Interpolatory quadrature}
+A natural way to build a rule is to replace $f$ by a polynomial that is easy to integrate.
+Given nodes $x_0,\dots,x_n$, let $p_n$ be the polynomial of degree at most $n$ that interpolates $f$ at these nodes.\index{interpolatory quadrature}
+In the Lagrange form, $p_n(x)=\sum_{i=0}^{n} f(x_i)\,\ell_i(x)$ with $\ell_i(x)=\prod_{j\ne i}\frac{x-x_j}{x_i-x_j}$, so that
+\[
+  Q(f)=\int_a^b p_n(x)\dd x=\sum_{i=0}^{n} w_i f(x_i),\qquad w_i=\int_a^b \ell_i(x)\dd x .
+\]
+
+\begin{theorem}{Degree of exactness of interpolatory rules}{interp}
+An interpolatory rule with $n+1$ nodes has degree of exactness at least $n$.
+\end{theorem}
+\begin{proof}
+If $f$ is a polynomial of degree at most $n$, then it coincides with its interpolation polynomial, $p_n=f$, so $Q(f)=\int_a^b p_n=\int_a^b f$.
+\end{proof}
+
+When the nodes are equally spaced, the rules are called \emph{Newton--Cotes rules}.\index{Newton--Cotes rules}
+With $n=1$ one obtains the \emph{trapezoidal rule}\index{trapezoidal rule}, and with $n=2$ \emph{Simpson's rule}\index{Simpson's rule}.
+On an interval $[x_0,x_0+2h]$ with midpoint $x_1$ they read
+\[
+  \frac{h}{2}\bigl[f(x_0)+f(x_0+h)\bigr]\ \text{(one cell of width $h$)},\qquad
+  \frac{h}{3}\bigl[f(x_0)+4f(x_1)+f(x_0+2h)\bigr].
+\]
+The weights of Simpson's rule are derived in Exercise~\ref{exo:weights}.
+Figure~\ref{fig:tsgeom} compares the two ideas on the running example: a line through two points, a parabola through three.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[t]{0.48\textwidth}
+    \centering
+    \begin{tikzpicture}\begin{axis}[bookaxis,height=0.78\linewidth,xmin=0,xmax=1.05,ymin=0,ymax=1.12,xtick={0,0.5,1},ytick={0,0.5,1}]
+      \addplot[draw=coral!80!black,fill=coral!18] coordinates {(0,0) (0,1) (1,0.367879) (1,0)} \closedcycle;
+      \addplot[navy,very thick,domain=0:1,samples=60] {exp(-x^2)};
+    \end{axis}\end{tikzpicture}
+    \caption{One trapezoid.}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.48\textwidth}
+    \centering
+    \begin{tikzpicture}\begin{axis}[bookaxis,height=0.78\linewidth,xmin=0,xmax=1.05,ymin=0,ymax=1.12,xtick={0,0.5,1},ytick={0,0.5,1}]
+      \addplot[draw=none,fill=amberc!35,domain=0:1,samples=40] {1-0.252675*x-0.379446*x^2} \closedcycle;
+      \addplot[navy,very thick,domain=0:1,samples=60] {exp(-x^2)};
+      \addplot[coral!80!black,thick,dashed,domain=0:1,samples=40] {1-0.252675*x-0.379446*x^2};
+      \addplot[only marks,mark=*,mark size=2pt,tealc!80!black] coordinates {(0,1) (0.5,0.778801) (1,0.367879)};
+    \end{axis}\end{tikzpicture}
+    \caption{One parabola through three points.}
+  \end{subfigure}
+  \caption{The trapezoidal rule and Simpson's rule on $[0,1]$ with $f(x)=e^{-x^{2}}$.}
+  \label{fig:tsgeom}
+\end{figure}
+
+\begin{theorem}{Simpson's rule is exact for cubics}{simpsoncubic}
+Simpson's rule has degree of exactness $3$, although it uses only three nodes.
+\end{theorem}
+\begin{proof}
+By Theorem~\ref{thm:interp}, the degree is at least $2$. By an affine change of variable we may work on $[-1,1]$, with nodes $-1,0,1$ and weights $\frac13,\frac43,\frac13$.
+For $f(x)=x^{3}$, the rule gives $\frac13(-1)+\frac43\cdot0+\frac13(1)=0=\int_{-1}^{1}x^{3}\dd x$, because both the rule and the integral are symmetric.
+Hence the rule is exact for $1,x,x^{2},x^{3}$, and so for all cubics. It is not exact for $x^{4}$ (Exercise~\ref{exo:quartic}).
+\end{proof}
+
+\section{Composite rules and error estimates}
+To reach high accuracy one does not increase the degree of the polynomial, which is numerically unstable for equally spaced nodes, but one subdivides the interval.
+With $h=(b-a)/n$ and $x_i=a+ih$, the \emph{composite trapezoidal rule} and the \emph{composite Simpson rule} (with $n$ even) are
+\begin{align}
+  T_n &= h\Bigl[\tfrac12 f(x_0)+\sum_{i=1}^{n-1}f(x_i)+\tfrac12 f(x_n)\Bigr], \label{eq:T}\\
+  S_n &= \tfrac h3\Bigl[f(x_0)+4\!\!\sum_{i\ \text{odd}}\!\!f(x_i)+2\!\!\sum_{\substack{i\ \text{even}\\2\le i\le n-2}}\!\!f(x_i)+f(x_n)\Bigr]. \label{eq:S}
+\end{align}
+
+\begin{theorem}{Composite error estimates}{compositeerr}
+If $f\in C^{2}[a,b]$, there is $\xi\in(a,b)$ such that $I-T_n=-\dfrac{(b-a)\,h^{2}}{12}f''(\xi)$.
+If $f\in C^{4}[a,b]$ and $n$ is even, there is $\eta\in(a,b)$ such that $I-S_n=-\dfrac{(b-a)\,h^{4}}{180}f^{(4)}(\eta)$.
+\end{theorem}
+
+Thus the trapezoidal rule has order $2$ and Simpson's rule has order $4$.
+
+\begin{example}{Checking the bounds}{bounds}
+For $f(x)=e^{-x^{2}}$ one has $f''(x)=(4x^{2}-2)e^{-x^{2}}$ and $f^{(4)}(x)=(16x^{4}-48x^{2}+12)e^{-x^{2}}$, with $\max_{[0,1]}\abs{f''}=2$ and $\max_{[0,1]}\abs{f^{(4)}}=12$ (both attained at $x=0$).
+For $n=4$, i.e.\ $h=\tfrac14$, Theorem~\ref{thm:compositeerr} gives
+$\abs{I-T_4}\le\frac{(1/4)^{2}}{12}\cdot2\approx1.0\cdot10^{-2}$ and $\abs{I-S_4}\le\frac{(1/4)^{4}}{180}\cdot12\approx2.6\cdot10^{-4}$.
+The actual errors are $3.8\cdot10^{-3}$ and $3.1\cdot10^{-5}$: the bounds are correct but pessimistic.
+\end{example}
+
+The quantity $f''(\xi)$ is unknown, so the theorem is used to \emph{predict the order} and to obtain guaranteed (if pessimistic) bounds, as in Exercise~\ref{exo:howmany}.
+Figure~\ref{fig:conv} confirms the orders on the running example: the two curves are straight lines in a log--log plot, with slopes $-2$ and $-4$.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[bookaxis,width=0.78\linewidth,height=0.5\linewidth,xmode=log,ymode=log,log basis x=2,
+        xtick={2,4,8,16,32,64,128},xticklabels={2,4,8,16,32,64,128},xlabel={number of cells $n$},ylabel={absolute error},
+        legend pos=south west,legend style={font=\scriptsize}]
+      \addplot[navy,mark=*,very thick] table[col sep=comma,x=n,y=err] {data/f1_trap.csv};
+      \addlegendentry{trapezoidal $T_n$}
+      \addplot[coral!80!black,mark=square*,very thick] table[col sep=comma,x=n,y=err] {data/f1_simp.csv};
+      \addlegendentry{Simpson $S_n$}
+      \addplot[gray,dashed,domain=2:128] {1.545e-2*(2/x)^2};
+      \addlegendentry{slope $-2$}
+      \addplot[gray,dotted,very thick,domain=2:128] {3.563e-4*(2/x)^4};
+      \addlegendentry{slope $-4$}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Errors of the composite trapezoidal and Simpson rules for $\int_0^1 e^{-x^{2}}\dd x$.}
+  \label{fig:conv}
+\end{figure}
+
+\section{Richardson extrapolation and Romberg's method}
+The trapezoidal error has a remarkable structure.
+By the Euler--Maclaurin formula,\index{Euler--Maclaurin formula} for smooth $f$,
+\begin{equation}
+  T_n-I=\frac{h^{2}}{12}\bigl[f'(b)-f'(a)\bigr]-\frac{h^{4}}{720}\bigl[f'''(b)-f'''(a)\bigr]+O(h^{6}).
+  \label{eq:eulermaclaurin}
+\end{equation}
+Since the leading term is $c\,h^{2}$ with $c$ independent of $h$, a combination of $T_n$ and $T_{2n}$ eliminates it:\index{Richardson extrapolation}
+\begin{equation}
+  \frac{4T_{2n}-T_n}{3}=I+O(h^{4}).
+  \label{eq:richardson}
+\end{equation}
+A direct computation (Exercise~\ref{exo:richardson}) shows that the left-hand side is exactly Simpson's rule $S_{2n}$.
+Repeating the idea on the new $h^{4}$ term, and so on, yields \emph{Romberg's method}:\index{Romberg's method}
+\[
+  R_{k,0}=T_{2^{k}},\qquad
+  R_{k,j}=\frac{4^{j}R_{k,j-1}-R_{k-1,j-1}}{4^{j}-1}\quad(1\le j\le k).
+\]
+Table~\ref{tab:romberg} shows the Romberg table for the running example: with only $16$ cells, the extrapolated values agree with $I=0.7468241328$ to nine digits.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Romberg table for $\int_0^1 e^{-x^{2}}\dd x$ ($n=2^k$ cells; exact value $0.7468241328$).}
+  \label{tab:romberg}
+  \small
+  \input{table-romberg.tex}
+\end{table}
+
+\section*{Exercises}
+\addcontentsline{toc}{section}{Exercises}
+\begin{exo}\label{exo:weights}
+Find the weights $w_0,w_1,w_2$ of the rule $\int_{-1}^{1}f\approx w_0f(-1)+w_1f(0)+w_2f(1)$ by requiring exactness for $1$, $x$ and $x^{2}$.
+\end{exo}
+\begin{exo}\label{exo:richardson}
+Let $h=(b-a)/(2n)$. Show that $\frac{4T_{2n}-T_n}{3}=S_{2n}$.
+\end{exo}
+\begin{exo}\label{exo:howmany}
+Using $\max_{[0,1]}\abs{f''}=2$ for $f(x)=e^{-x^{2}}$, find the smallest $n$ for which Theorem~\ref{thm:compositeerr} guarantees $\abs{I-T_n}\le10^{-6}$.
+\end{exo}
+\begin{exo}\label{exo:quartic}
+Apply Simpson's rule with one pair of cells on $[0,1]$ to $x^{4}$. Compare with the exact integral and with the error formula of Theorem~\ref{thm:compositeerr}.
+\end{exo}
+
+% ------------------------------------------------------------------ Chapter 3
+\chapter{Gaussian Quadrature}\label{ch:gauss}
+
+\section{Freeing the nodes}
+In a Newton--Cotes rule the nodes are imposed and only the weights are chosen. If we also choose the nodes, we have $2m$ parameters for an $m$-node rule, and we may hope for degree of exactness $2m-1$.
+The first nontrivial case shows that this works.
+
+\begin{example}{The two-point rule}{twopoint}
+We look for nodes $\pm t$ and weights $w_1=w_2=w$ (by symmetry) such that $w f(-t)+w f(t)\approx\int_{-1}^{1}f$.
+Exactness for $f=1$ gives $2w=2$, so $w=1$. Exactness for $f=x^{2}$ gives $2t^{2}=\tfrac23$, so $t=\pm\frac{1}{\sqrt3}\approx\pm0.5773502692$.
+The rule is then automatically exact for $x$ and $x^{3}$ (odd functions), hence for all cubics: two nodes give degree $3=2\cdot2-1$.
+\end{example}
+
+\section{Legendre polynomials}
+The optimal nodes turn out to be the zeros of orthogonal polynomials.
+The \emph{Legendre polynomials}\index{Legendre polynomials} $P_n$ can be defined by Rodrigues' formula
+\[
+  P_n(x)=\frac{1}{2^{n}n!}\,\frac{\mathrm d^{n}}{\mathrm dx^{n}}\bigl(x^{2}-1\bigr)^{n},
+\]
+or by the recurrence $P_0=1$, $P_1=x$ and $(n+1)P_{n+1}(x)=(2n+1)\,x\,P_n(x)-n\,P_{n-1}(x)$.
+The first ones are
+\[
+  P_2=\tfrac12(3x^{2}-1),\quad P_3=\tfrac12(5x^{3}-3x),\quad P_4=\tfrac18(35x^{4}-30x^{2}+3),\quad P_5=\tfrac18(63x^{5}-70x^{3}+15x),
+\]
+and they are drawn in Figure~\ref{fig:legendre}.
+Their key property is \emph{orthogonality}\index{orthogonality}:
+\begin{equation}
+  \int_{-1}^{1}P_m(x)P_n(x)\dd x=\frac{2}{2n+1}\,\delta_{mn}.
+  \label{eq:orthogonality}
+\end{equation}
+In particular, $P_m$ is orthogonal to every polynomial of degree less than $m$, and it has $m$ distinct real zeros in $(-1,1)$.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[bookaxis,width=0.8\linewidth,height=0.5\linewidth,xlabel={$x$},ylabel={$P_n(x)$},xmin=-1,xmax=1,ymin=-1.1,ymax=1.1,
+        legend pos=outer north east,legend style={font=\scriptsize},axis lines=middle,samples=80,domain=-1:1]
+      \addplot[navy,thick] {x};                                        \addlegendentry{$P_1$}
+      \addplot[tealc!80!black,thick] {(3*x^2-1)/2};                    \addlegendentry{$P_2$}
+      \addplot[amberc!85!black,thick] {(5*x^3-3*x)/2};                 \addlegendentry{$P_3$}
+      \addplot[coral!85!black,thick] {(35*x^4-30*x^2+3)/8};            \addlegendentry{$P_4$}
+      \addplot[violet,thick] {(63*x^5-70*x^3+15*x)/8};                 \addlegendentry{$P_5$}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{The Legendre polynomials $P_1,\dots,P_5$ on $[-1,1]$.}
+  \label{fig:legendre}
+\end{figure}
+
+\section{The Gauss--Legendre rule}
+\begin{theorem}{Gauss--Legendre quadrature}{gauss}
+Let $t_1,\dots,t_m$ be the zeros of $P_m$ and let
+\[
+  w_i=\frac{2}{(1-t_i^{2})\,[P_m'(t_i)]^{2}},\qquad i=1,\dots,m .
+\]
+Then the rule $G_m(f)=\sum_{i=1}^{m}w_i f(t_i)$ has degree of exactness $2m-1$ on $[-1,1]$, and no $m$-node rule has a higher one.
+If $f\in C^{2m}[-1,1]$, then for some $\xi\in(-1,1)$
+\[
+  \int_{-1}^{1}f(x)\dd x-G_m(f)=\frac{2^{2m+1}(m!)^{4}}{(2m+1)\,[(2m)!]^{3}}\,f^{(2m)}(\xi).
+\]
+\end{theorem}
+\begin{proof}[Proof of the degree of exactness]
+Take a polynomial $p$ of degree at most $2m-1$ and divide it by $P_m$: $p=qP_m+r$ with $\deg q\le m-1$ and $\deg r\le m-1$.
+By orthogonality, $\int_{-1}^{1}qP_m=0$, so $\int p=\int r$.
+Since $P_m(t_i)=0$, we have $p(t_i)=r(t_i)$, hence $G_m(p)=G_m(r)$.
+The rule with the nodes $t_i$ and the weights above is interpolatory, so it is exact for $r$ by Theorem~\ref{thm:interp}. Therefore $G_m(p)=G_m(r)=\int r=\int p$.
+\end{proof}
+
+On a general interval $[a,b]$, the change of variable $x=\frac{b-a}{2}t+\frac{b+a}{2}$ gives
+\[
+  \int_a^b f(x)\dd x\approx\frac{b-a}{2}\sum_{i=1}^{m}w_i\,f\!\Bigl(\frac{b-a}{2}t_i+\frac{b+a}{2}\Bigr).
+\]
+The nodes and weights for small $m$ are listed in Table~\ref{tab:nodes} (the negative nodes are the mirror images of the positive ones, with equal weights).\index{Gauss--Legendre quadrature}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Gauss--Legendre nodes and weights on $[-1,1]$, computed by the script \texttt{book\_data.py}.}
+  \label{tab:nodes}
+  \input{table-gaussnodes.tex}
+\end{table}
+
+\section{Comparison on the running example}
+Table~\ref{tab:gausserr} gives the Gauss--Legendre approximations of $I$ on $[0,1]$.
+With $m=5$ nodes (five evaluations of $f$) the error is $6.1\cdot10^{-9}$.
+To reach a comparable accuracy, the composite Simpson rule needs $n=32$ cells, that is $33$ evaluations, which gives an error of $7.8\cdot10^{-9}$.
+For this analytic integrand the error of the Gaussian rule decreases much faster than any fixed power of $1/m$.
+This behaviour is typical of Gaussian rules and is explained by the theory of polynomial approximation \parencite{trefethen2008,trefethen2013}.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Gauss--Legendre approximations of $\int_0^1 e^{-x^{2}}\dd x$ with $m$ nodes.}
+  \label{tab:gausserr}
+  \input{table-gausserr.tex}
+\end{table}
+
+\section{Other weight functions}
+Orthogonality with respect to a different weight leads to other Gaussian rules\index{Gaussian quadrature}.
+Gauss--Chebyshev rules approximate $\int_{-1}^{1}f(x)(1-x^{2})^{-1/2}\dd x$, Gauss--Laguerre rules approximate $\int_0^\infty f(x)e^{-x}\dd x$, and Gauss--Hermite rules approximate $\int_{-\infty}^{\infty}f(x)e^{-x^{2}}\dd x$.
+The nodes and weights can be computed as eigenvalues and eigenvector components of a symmetric tridiagonal matrix \parencite{golub1969}.
+
+\section*{Exercises}
+\addcontentsline{toc}{section}{Exercises}
+\begin{exo}\label{exo:twopointquartic}
+Apply the two-point Gauss rule of Example~\ref{exa:twopoint} to $x^{4}$ on $[-1,1]$ and compare with the exact integral.
+\end{exo}
+\begin{exo}\label{exo:threepoint}
+The three-point rule has nodes $0,\pm\sqrt{3/5}$ and weights $\frac89,\frac59,\frac59$. Use it to compute $\int_{-1}^{1}x^{4}\dd x$.
+\end{exo}
+\begin{exo}\label{exo:mapping}
+Show that the change of variable $x=\frac{b-a}{2}t+\frac{b+a}{2}$ multiplies all weights by $\frac{b-a}{2}$.
+\end{exo}
+\begin{exo}\label{exo:g2}
+Compute $G_2$ for $\int_0^1 e^{-x^{2}}\dd x$ and compare with Table~\ref{tab:gausserr}.
+\end{exo}
+
+% ------------------------------------------------------------------ Chapter 4
+\chapter{Quadrature in Practice}\label{ch:practice}
+
+\section{Rounding errors}
+In exact arithmetic the error of a convergent rule tends to $0$ as $n$ grows. On a computer it does not: each evaluation of $f$ and each addition is rounded, with relative error at most the \emph{machine epsilon}\index{machine epsilon} $\varepsilon\approx2.2\cdot10^{-16}$ in double precision.
+Quadrature rules with positive weights, like all those of this book, are numerically stable, because the rounding errors on the $f(x_i)$ are multiplied by weights that add up to $b-a$.
+In practice, the total error of a very fine composite rule is the sum of the \emph{truncation error}, which decreases with $h$, and of rounding errors, which can slowly increase with $n$.
+This is why the error curves of Chapter~\ref{ch:newton} and of the Gaussian rules stop decreasing around $10^{-16}$.
+
+\section{Adaptive Simpson quadrature}
+A composite rule uses the same step everywhere, although most of the error often comes from a small part of the interval, near a singularity or a rapid variation.
+\emph{Adaptive quadrature}\index{adaptive quadrature} refines the mesh only where needed.
+For Simpson's rule the idea is the following.
+Let $S$ be Simpson's rule on $[a,b]$ and let $S'$ be the sum of Simpson's rules on the two halves.
+Since the error is proportional to $h^{4}$, halving $h$ divides the error by $16$, so $I-S'\approx\frac{1}{15}(S'-S)$, and therefore
+\[
+  I\approx S'+\frac{S'-S}{15}.
+\]
+If $\abs{S'-S}\le15\varepsilon_{\mathrm{tol}}$ the interval is accepted and this corrected value is returned; otherwise both halves are processed recursively with tolerance $\varepsilon_{\mathrm{tol}}/2$ (Exercise~\ref{exo:fifteen}).
+The box below summarises the method, and the listing after it gives a Python implementation.
+
+\begin{tcolorbox}[enhanced,breakable,colback=white,colframe=navy!40,boxrule=0.5pt,arc=2pt,title={\bfseries Algorithm: adaptive Simpson quadrature},coltitle=white,colbacktitle=navy,fonttitle=\small]
+\small
+\begin{algorithmic}[1]
+  \Function{Rec}{$f,a,b,\varepsilon,S$}
+    \State $m\gets(a+b)/2$
+    \State $S_L\gets\frac{m-a}{6}\bigl[f(a)+4f(\tfrac{a+m}{2})+f(m)\bigr]$,\quad $S_R\gets\frac{b-m}{6}\bigl[f(m)+4f(\tfrac{m+b}{2})+f(b)\bigr]$
+    \If{$\abs{S_L+S_R-S}\le15\varepsilon$}
+      \State \Return $S_L+S_R+(S_L+S_R-S)/15$
+    \Else
+      \State \Return \Call{Rec}{$f,a,m,\varepsilon/2,S_L$} $+$ \Call{Rec}{$f,m,b,\varepsilon/2,S_R$}
+    \EndIf
+  \EndFunction
+\end{algorithmic}
+\end{tcolorbox}
+
+\begin{lstlisting}
+def adaptive_simpson(f, a, b, eps, maxdepth=50):
+    def simpson(fa, fm, fb, a, b):
+        return (b - a) / 6 * (fa + 4 * fm + fb)
+
+    def rec(a, b, eps, whole, fa, fm, fb, depth):
+        m = (a + b) / 2
+        flm, frm = f((a + m) / 2), f((m + b) / 2)
+        left = simpson(fa, flm, fm, a, m)
+        right = simpson(fm, frm, fb, m, b)
+        delta = left + right - whole
+        if depth <= 0 or abs(delta) <= 15 * eps:
+            return left + right + delta / 15
+        return (rec(a, m, eps / 2, left, fa, flm, fm, depth - 1) +
+                rec(m, b, eps / 2, right, fm, frm, fb, depth - 1))
+
+    fa, fb, fm = f(a), f(b), f((a + b) / 2)
+    return rec(a, b, eps, simpson(fa, fm, fb, a, b), fa, fm, fb, maxdepth)
+\end{lstlisting}
+
+Table~\ref{tab:adaptive} reports the results for three integrands and a requested tolerance of $10^{-8}$.
+The method is conservative: the actual errors are about $10^{-11}$.
+The integrand $\sqrt{x}$ needs many more evaluations than $e^{-x^{2}}$, because its derivative is infinite at $0$.
+Figure~\ref{fig:mesh} shows why: the algorithm automatically concentrates small subintervals near the singularity, where the width of the cells decreases proportionally to the distance to $0$.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Adaptive Simpson quadrature with tolerance $10^{-8}$.}
+  \label{tab:adaptive}
+  \input{table-adaptive.tex}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[bookaxis,width=0.7\linewidth,height=0.45\linewidth,xmode=log,ymode=log,
+        xlabel={position $x$ (midpoint of the subinterval)},ylabel={subinterval width},legend pos=north west,legend style={font=\scriptsize}]
+      \addplot[only marks,mark=*,tealc!80!black,mark size=2pt]
+        table[col sep=comma,x expr={(\thisrow{a}+\thisrow{b})/2},y expr={\thisrow{b}-\thisrow{a}}] {data/adaptive_mesh.csv};
+      \addlegendentry{accepted subintervals}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Final mesh of the adaptive Simpson rule for $\int_0^1\sqrt{x}\dd x$ with tolerance $10^{-5}$: the cells shrink toward the singularity at $x=0$.}
+  \label{fig:mesh}
+\end{figure}
+
+\section{Choosing a method}
+No rule is best in all situations. The decision tree of Figure~\ref{fig:tree} summarises the advice of this book, and Table~\ref{tab:summary} lists the main properties of the rules studied.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[node distance=0.9cm and 1.6cm,
+      q/.style={diamond,aspect=2.3,draw=navy,thick,fill=navy!6,inner sep=1pt,align=center,font=\small},
+      a/.style={rectangle,rounded corners=3pt,draw=tealc!80!black,thick,fill=tealc!12,align=center,font=\small,minimum height=0.9cm},
+      s/.style={rounded rectangle,draw=navy,thick,fill=navy,text=white,font=\small\bfseries,minimum height=0.8cm},
+      arr/.style={-{Stealth[length=2.4mm]},thick}]
+    \node[s] (start) {Integral of $f$ on $[a,b]$};
+    \node[q,below=of start] (q1) {Only tabulated\\values?};
+    \node[a,right=2.4cm of q1] (a1) {Composite Simpson\\(or trapezoid)};
+    \node[q,below=1.1cm of q1] (q2) {Smooth\\integrand?};
+    \node[a,right=2.4cm of q2] (a2) {Gauss--Legendre,\\increase $m$ until stable};
+    \node[a,below=1.1cm of q2] (a3) {Adaptive Simpson,\\split at known singularities};
+    \draw[arr] (start)--(q1);
+    \draw[arr] (q1)--node[above]{yes}(a1);
+    \draw[arr] (q1)--node[left]{no}(q2);
+    \draw[arr] (q2)--node[above]{yes}(a2);
+    \draw[arr] (q2)--node[left]{no}(a3);
+  \end{tikzpicture}
+  \caption{A simple decision tree for choosing a one-dimensional quadrature rule.}
+  \label{fig:tree}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \caption{Summary of the rules studied in this book.}
+  \label{tab:summary}
+  \small
+  \begin{tabular}{@{}lccl@{}}
+    \toprule
+    Rule & Degree & Order & Typical use \\
+    \midrule
+    Left/right sum & $0$ & $h$ & illustration only \\
+    Midpoint & $1$ & $h^{2}$ & open rules, simple codes \\
+    Trapezoidal & $1$ & $h^{2}$ & tabulated or periodic data \\
+    Simpson & $3$ & $h^{4}$ & robust default for smooth data \\
+    Romberg & increasing & $h^{2k}$ & smooth integrands, reuse of $T_n$ \\
+    Gauss--Legendre ($m$ nodes) & $2m-1$ & fast for analytic $f$ & smooth integrands \\
+    Adaptive Simpson & local & tolerance driven & singularities, sharp features \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+For further reading, \textcite{davis1984} is the classical reference on quadrature, \textcite{burden2016} and \textcite{press2007} give accessible introductions with code, and \textcite{trefethen2013} develops the approximation theory that explains why Gaussian rules converge so quickly.
+
+\section*{Exercises}
+\addcontentsline{toc}{section}{Exercises}
+\begin{exo}\label{exo:fifteen}
+The error of Simpson's rule on an interval of length $L$ is proportional to $L^{5}$ (for a fixed smooth $f$, this is the local form of the $h^{4}$ estimate). Use this to explain the constant $15$ in $I\approx S'+(S'-S)/15$.
+\end{exo}
+\begin{exo}\label{exo:sqrt}
+Explain, using Figure~\ref{fig:mesh}, why Table~\ref{tab:adaptive} reports many more evaluations for $\sqrt{x}$ than for $e^{-x^{2}}$.
+\end{exo}
+
+% ================================================================== back matter
+\appendix
+
+\chapter{Notation}\label{app:notation}
+\begin{table}[htbp]
+  \centering
+  \caption{Symbols used in this book.}
+  \small
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    Symbol & Meaning \\
+    \midrule
+    $I$ & exact value of the integral $\int_a^b f(x)\dd x$ \\
+    $h$ & cell width, $h=(b-a)/n$ \\
+    $x_i$ & equally spaced nodes, $x_i=a+ih$ \\
+    $L_n,R_n,M_n$ & left, right and midpoint Riemann sums \\
+    $T_n,S_n$ & composite trapezoidal and Simpson rules \\
+    $R_{k,j}$ & entries of the Romberg table \\
+    $P_n$ & Legendre polynomial of degree $n$ \\
+    $t_i,w_i$ & Gauss--Legendre nodes and weights on $[-1,1]$ \\
+    $G_m$ & $m$-node Gauss--Legendre rule \\
+    $\varepsilon$ & machine epsilon, about $2.2\cdot10^{-16}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\chapter{Solutions to the Exercises}\label{app:solutions}
+
+\paragraph{Exercise~\ref{exo:midpoint}.}
+By a translation we may take the interval $[-h,h]$. Then $M(f)=2hf(0)$. For $f=1$: $M=2h=\int$. For $f=x$: $M=0=\int_{-h}^{h}x\dd x$. For $f=x^{2}$: $M=0$ while $\int_{-h}^{h}x^{2}\dd x=\frac{2h^{3}}{3}\ne0$. So the degree of exactness is exactly $1$.
+
+\paragraph{Exercise~\ref{exo:order}.}
+From Table~\ref{tab:riemann}: $\log_2\frac{4.05\cdot10^{-2}}{2.00\cdot10^{-2}}\approx1.02$ and $\log_2\frac{2.00\cdot10^{-2}}{9.94\cdot10^{-3}}\approx1.01$. The order is $1$.
+
+\paragraph{Exercise~\ref{exo:monotone}.}
+If $f$ is increasing, then on each cell $[x_i,x_{i+1}]$ we have $f(x_i)\le f(x)\le f(x_{i+1})$, so $hf(x_i)\le\int_{x_i}^{x_{i+1}}f\le hf(x_{i+1})$. Summing over the cells gives $L_n\le I\le R_n$. For a decreasing function the inequalities are reversed: $R_n\le I\le L_n$. This agrees with the running example, where $R_4=0.6640<I=0.7468<L_4=0.8220$.
+
+\paragraph{Exercise~\ref{exo:weights}.}
+Exactness for $1,x,x^{2}$ gives $w_0+w_1+w_2=2$, $-w_0+w_2=0$ and $w_0+w_2=\frac23$. Hence $w_0=w_2=\frac13$ and $w_1=2-\frac23=\frac43$: Simpson's weights $\frac13,\frac43,\frac13$.
+
+\paragraph{Exercise~\ref{exo:richardson}.}
+Write $f_i=f(a+ih)$ with $h=(b-a)/(2n)$. Then $T_{2n}=h\bigl[\frac{f_0}{2}+\sum_{i=1}^{2n-1}f_i+\frac{f_{2n}}2\bigr]$ and, with cells of width $2h$, $T_n=h\bigl[f_0+2\sum_{i\ \text{even}}f_i+f_{2n}\bigr]$ (sum over even $i$ with $2\le i\le 2n-2$). Therefore
+$4T_{2n}-T_n=h\bigl[f_0+4\sum_{i\ \text{odd}}f_i+2\sum_{i\ \text{even}}f_i+f_{2n}\bigr]=3S_{2n}$.
+Numerically, $(4T_4-T_2)/3=(4\cdot0.7429840978-0.7313702518)/3=0.7468553798=S_4$.
+
+\paragraph{Exercise~\ref{exo:howmany}.}
+We need $\frac{(b-a)h^{2}}{12}\cdot2\le10^{-6}$ with $b-a=1$, i.e.\ $h^{2}\le6\cdot10^{-6}$, $h\le2.449\cdot10^{-3}$, so $n\ge1/h=408.2$. The smallest guaranteed $n$ is $409$. (The actual error is far smaller, since the bound is pessimistic.)
+
+\paragraph{Exercise~\ref{exo:quartic}.}
+With nodes $0,\frac12,1$: $S=\frac16\bigl[0+4\cdot\frac1{16}+1\bigr]=\frac{5}{24}\approx0.208333$, while $\int_0^1x^{4}\dd x=\frac15$. The error is $I-S=\frac15-\frac5{24}=-\frac1{120}$. The formula gives $-\frac{(b-a)h^{4}}{180}f^{(4)}(\eta)=-\frac{(1/2)^{4}}{180}\cdot24=-\frac1{120}$, since $f^{(4)}=24$ is constant: the formula is exact here.
+
+\paragraph{Exercise~\ref{exo:twopointquartic}.}
+The rule gives $1\cdot\bigl(\frac1{\sqrt3}\bigr)^{4}+1\cdot\bigl(\frac1{\sqrt3}\bigr)^{4}=\frac29$, while $\int_{-1}^{1}x^{4}\dd x=\frac25$. The rule is not exact for degree $4$, as expected from a degree of exactness of $3$.
+
+\paragraph{Exercise~\ref{exo:threepoint}.}
+$\frac59\bigl(\sqrt{3/5}\bigr)^{4}\cdot2+\frac89\cdot0=\frac{10}{9}\cdot\frac{9}{25}=\frac25$, which is exactly $\int_{-1}^{1}x^{4}\dd x$, because the degree of exactness is $2\cdot3-1=5\ge4$.
+
+\paragraph{Exercise~\ref{exo:mapping}.}
+With $x=\frac{b-a}{2}t+\frac{b+a}{2}$ we have $\dd x=\frac{b-a}{2}\dd t$, so $\int_a^bf(x)\dd x=\frac{b-a}{2}\int_{-1}^{1}f\bigl(x(t)\bigr)\dd t\approx\frac{b-a}{2}\sum_iw_if\bigl(x(t_i)\bigr)$: every weight is multiplied by $\frac{b-a}{2}$.
+
+\paragraph{Exercise~\ref{exo:g2}.}
+On $[0,1]$, $x_{1,2}=\frac12\mp\frac{1}{2\sqrt3}\approx0.2113,\,0.7887$ and both weights equal $\frac12$. Thus $G_2=\frac12\bigl(e^{-0.04466}+e^{-0.62201}\bigr)\approx0.7466$, in agreement with Table~\ref{tab:gausserr} ($G_2=0.7465946883$).
+
+\paragraph{Exercise~\ref{exo:fifteen}.}
+Let $E=I-S\approx cL^{5}f^{(4)}$ be the error of the rule on the whole interval of length $L$. Each half has length $L/2$, hence an error about $c(L/2)^{5}f^{(4)}=E/32$ (taking $f^{(4)}$ roughly constant), and the two halves together give $I-S'\approx2\cdot E/32=E/16$. Then $S'-S=(I-S)-(I-S')\approx E-\frac E{16}=\frac{15}{16}E$, hence $I-S'\approx\frac E{16}=\frac{S'-S}{15}$.
+
+\paragraph{Exercise~\ref{exo:sqrt}.}
+The derivatives of $\sqrt{x}$ blow up at $0$, so Simpson's rule has no longer order $4$ on the cells that touch $0$. The algorithm must halve these cells many times (the points in Figure~\ref{fig:mesh} lie on a line of slope $1$ in log--log scale, i.e.\ the width is proportional to the distance to $0$), while for $e^{-x^{2}}$ a few uniform halvings suffice.
+
+% ================================================================== bibliography and index
+\backmatter
+\printbibliography[heading=bibintoc]
+
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{Index}
+\printindex
+
+\end{document}

@@ -18,6 +18,11 @@ Documents réalisés pour illustrer le travail, avec le code source complet. Les
 | Présentation de soutenance | 11 diapositives Beamer 16:9, thème personnalisé | [PDF](projects/beamer-defense/main.pdf) | [dossier](projects/beamer-defense) |
 | Galerie de diagrammes TikZ | Six figures vectorielles, TikZ et tikz-cd | [PDF](projects/tikz-gallery/main.pdf) | [dossier](projects/tikz-gallery) |
 | Visualisation de données | Six graphiques pgfplots lus depuis des fichiers CSV | [PDF](projects/pgfplots-dataviz/main.pdf) | [dossier](projects/pgfplots-dataviz) |
+| De Word à LaTeX | Un document Word mal formaté et sa version LaTeX bien composée | [PDF](projects/word-to-latex/main.pdf) · [Word](projects/word-to-latex/word-before.docx) | [dossier](projects/word-to-latex) |
+| Galerie TikZ (12 diagrammes) | Réseau de neurones, organigramme, automates, circuit, chimie, carte mentale… | [PDF](projects/tikz-diagrams/main.pdf) | [dossier](projects/tikz-diagrams) |
+| Présentation Beamer | 13 diapositives, thème personnalisé, animations TikZ | [PDF](projects/beamer-integration/main.pdf) | [dossier](projects/beamer-integration) |
+| Article arXiv (deux colonnes) | 3 pages, archive de soumission vérifiée, résultats reproduits par Python | [PDF](projects/arxiv-preprint/main.pdf) | [dossier](projects/arxiv-preprint) |
+| Livre « Numerical Integration » | 39 pages, classe `book`, index, bibliographie, exercices et solutions | [PDF](projects/book-numerical-integration/main.pdf) | [dossier](projects/book-numerical-integration) |
 
 ## Compiler un projet
 

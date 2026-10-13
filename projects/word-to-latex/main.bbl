@@ -1,0 +1,140 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global/global}
+    \entry{burden2016}{book}{}{}
+      \name{author}{3}{}{%
+        {{hash=087f2271a0786e7c8db8fd33785aed18}{%
+           family={Burden},
+           familyi={B\bibinitperiod},
+           given={Richard\bibnamedelima L.},
+           giveni={R\bibinitperiod\bibinitdelim L\bibinitperiod}}}%
+        {{hash=4204928ced965b41fb12c0ed6d636f41}{%
+           family={Faires},
+           familyi={F\bibinitperiod},
+           given={J.\bibnamedelimi Douglas},
+           giveni={J\bibinitperiod\bibinitdelim D\bibinitperiod}}}%
+        {{hash=11997aae677e6481e19bb46513bcc504}{%
+           family={Burden},
+           familyi={B\bibinitperiod},
+           given={Annette\bibnamedelima M.},
+           giveni={A\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Boston}%
+      }
+      \list{publisher}{1}{%
+        {Cengage Learning}%
+      }
+      \strng{namehash}{e719a6e443b092afa3205d3e8522b075}
+      \strng{fullhash}{e719a6e443b092afa3205d3e8522b075}
+      \strng{fullhashraw}{e719a6e443b092afa3205d3e8522b075}
+      \strng{bibnamehash}{e719a6e443b092afa3205d3e8522b075}
+      \strng{authorbibnamehash}{e719a6e443b092afa3205d3e8522b075}
+      \strng{authornamehash}{e719a6e443b092afa3205d3e8522b075}
+      \strng{authorfullhash}{e719a6e443b092afa3205d3e8522b075}
+      \strng{authorfullhashraw}{e719a6e443b092afa3205d3e8522b075}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{edition}{10}
+      \field{title}{Numerical Analysis}
+      \field{year}{2016}
+    \endentry
+    \entry{atkinson1989}{book}{}{}
+      \name{author}{1}{}{%
+        {{hash=6ef9daa385688cbe68f62d197b6b8808}{%
+           family={Atkinson},
+           familyi={A\bibinitperiod},
+           given={Kendall\bibnamedelima E.},
+           giveni={K\bibinitperiod\bibinitdelim E\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {New York}%
+      }
+      \list{publisher}{1}{%
+        {John Wiley \& Sons}%
+      }
+      \strng{namehash}{6ef9daa385688cbe68f62d197b6b8808}
+      \strng{fullhash}{6ef9daa385688cbe68f62d197b6b8808}
+      \strng{fullhashraw}{6ef9daa385688cbe68f62d197b6b8808}
+      \strng{bibnamehash}{6ef9daa385688cbe68f62d197b6b8808}
+      \strng{authorbibnamehash}{6ef9daa385688cbe68f62d197b6b8808}
+      \strng{authornamehash}{6ef9daa385688cbe68f62d197b6b8808}
+      \strng{authorfullhash}{6ef9daa385688cbe68f62d197b6b8808}
+      \strng{authorfullhashraw}{6ef9daa385688cbe68f62d197b6b8808}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{edition}{2}
+      \field{title}{An Introduction to Numerical Analysis}
+      \field{year}{1989}
+    \endentry
+    \entry{press2007}{book}{}{}
+      \name{author}{4}{}{%
+        {{hash=0eab1ccd4d6c57a2ff6794a4724ccafb}{%
+           family={Press},
+           familyi={P\bibinitperiod},
+           given={William\bibnamedelima H.},
+           giveni={W\bibinitperiod\bibinitdelim H\bibinitperiod}}}%
+        {{hash=ff8354846900d7ef6c94cb025f7e938c}{%
+           family={Teukolsky},
+           familyi={T\bibinitperiod},
+           given={Saul\bibnamedelima A.},
+           giveni={S\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+        {{hash=0bb298496cc38e45b21c576a005078a0}{%
+           family={Vetterling},
+           familyi={V\bibinitperiod},
+           given={William\bibnamedelima T.},
+           giveni={W\bibinitperiod\bibinitdelim T\bibinitperiod}}}%
+        {{hash=f40726c661611c8a024d53294b6e0ad0}{%
+           family={Flannery},
+           familyi={F\bibinitperiod},
+           given={Brian\bibnamedelima P.},
+           giveni={B\bibinitperiod\bibinitdelim P\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {Cambridge}%
+      }
+      \list{publisher}{1}{%
+        {Cambridge University Press}%
+      }
+      \strng{namehash}{618fa62f030076edf2937faa1b1684fb}
+      \strng{fullhash}{f75c24a04994b574cb620c685a1f8229}
+      \strng{fullhashraw}{f75c24a04994b574cb620c685a1f8229}
+      \strng{bibnamehash}{618fa62f030076edf2937faa1b1684fb}
+      \strng{authorbibnamehash}{618fa62f030076edf2937faa1b1684fb}
+      \strng{authornamehash}{618fa62f030076edf2937faa1b1684fb}
+      \strng{authorfullhash}{f75c24a04994b574cb620c685a1f8229}
+      \strng{authorfullhashraw}{f75c24a04994b574cb620c685a1f8229}
+      \field{sortinit}{1}
+      \field{sortinithash}{4f6aaa89bab872aa0999fec09ff8e98a}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{edition}{3}
+      \field{title}{Numerical Recipes: The Art of Scientific Computing}
+      \field{year}{2007}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

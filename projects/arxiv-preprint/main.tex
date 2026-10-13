@@ -1,0 +1,266 @@
+\pdfoutput=1 % required by arXiv: process with pdfLaTeX
+\documentclass[10pt,twocolumn,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,top=2.3cm,bottom=2.3cm,left=1.9cm,right=1.9cm,columnsep=0.8cm]{geometry}
+\usepackage{amsmath,amsthm,mathtools}
+\usepackage{newtxtext,newtxmath}
+\usepackage{microtype}
+\usepackage{graphicx,booktabs}
+\usepackage{listings}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.16}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{subcaption}
+\usepackage{fancyhdr}
+\usepackage[round,authoryear]{natbib}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+
+\emergencystretch=2em
+\setlength{\bibsep}{2pt}
+\setlength{\parskip}{0pt}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+\DeclareMathOperator{\erf}{erf}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\itshape Newton--Cotes versus Gauss--Legendre quadrature}
+\fancyhead[R]{\footnotesize N. S. Yamontche}
+\fancyfoot[C]{\footnotesize\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\footnotesize\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+\lstset{basicstyle=\ttfamily\scriptsize,frame=single,numbers=left,numberstyle=\tiny,xleftmargin=1.3em,
+  columns=fullflexible,showstringspaces=false,keywordstyle=\bfseries,language=Python}
+
+\begin{document}
+
+% ---------------------------------------------------------------- title block spanning both columns
+\twocolumn[{%
+  \begin{center}
+    {\LARGE\bfseries Newton--Cotes versus Gauss--Legendre Quadrature\\[2pt]
+       on Smooth and Non-Smooth Integrands:\\[2pt] A Numerical Comparison\textsuperscript{*}\par}
+    \vspace{1.1em}
+    {\large N'sol\'e Samson Yamontche\par}
+    \vspace{0.3em}
+    {\small Natitingou, Benin \quad\textbullet\quad \url{https://samsonyamontchensolegit.github.io}\par}
+    \vspace{0.2em}
+    {\small October 2026\par}
+  \end{center}
+  \vspace{0.5em}
+  \begin{center}
+  \begin{minipage}{0.86\textwidth}
+    \small\noindent\textbf{Abstract.}\
+    We compare three families of quadrature rules for definite integrals on a bounded interval: the composite trapezoidal rule, the composite Simpson rule and the Gauss--Legendre rule.
+    The rules are applied to three integrands of increasing difficulty: an entire function, a function with a square-root singularity of the derivative at an endpoint, and the Runge function, which is analytic but has poles close to the interval.
+    Costs are measured in the number of function evaluations.
+    The observed convergence orders agree with the classical theory: $O(N^{-2})$ and $O(N^{-4})$ for the composite rules on smooth integrands, $O(N^{-3/2})$ for both composite rules and $O(N^{-3})$ for Gauss--Legendre in the presence of the singularity, and a geometric rate $\rho^{-2m}$ for Gauss--Legendre on the Runge function.
+    The experiments also show a pre-asymptotic regime in which the cheapest rule is not the asymptotically best one.
+
+    \smallskip
+    \noindent\textbf{Keywords:} numerical quadrature, Gauss--Legendre, Simpson's rule, convergence rates.
+    \quad\textbf{MSC 2020:} 65D30, 65D32.
+  \end{minipage}
+  \end{center}
+  \vspace{1.2em}
+}]
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\footnotetext[1]{This document is a typesetting sample prepared to demonstrate arXiv-ready \LaTeX{} formatting in a two-column layout. Every number and curve in it is reproduced by the script \texttt{quadrature.py} distributed with the source.}
+
+\section{Introduction}
+Many integrals that occur in applications have no closed form, and numerical quadrature is the standard replacement.
+Textbooks usually present the Newton--Cotes rules first, because they use equally spaced nodes and are easy to implement, and the Gauss rules afterwards, because their nodes are the roots of orthogonal polynomials \citep{burden2016,press2007}.
+A common summary is that Gauss rules ``are twice as good'': an $m$-point Gauss--Legendre rule integrates exactly all polynomials of degree at most $2m-1$, whereas an $m$-point Newton--Cotes rule only reaches degree $m-1$ or $m$.
+Whether this advantage matters in practice depends strongly on the integrand \citep{trefethen2008}.
+
+The goal of this note is modest and fully reproducible: we measure, for three test integrals, how the absolute error of each rule decreases with the number $N$ of function evaluations, and we compare the observed rates with the theoretical ones.
+For background on quadrature we refer to \citet{davis1984}; for the computation of the Gauss nodes and weights we use the eigenvalue approach of \citet{golub1969}.
+
+\section{Quadrature rules}
+Let $f$ be a real function on $[a,b]$ and $I=\int_a^b f(x)\,\mathrm{d}x$.
+
+\subsection{Composite Newton--Cotes rules}
+Let $n$ be a positive integer, $h=(b-a)/n$ and $x_i=a+ih$. The composite trapezoidal and Simpson rules are
+\begin{equation}
+  T_n = h\left[\tfrac12 f(x_0)+\sum_{i=1}^{n-1}f(x_i)+\tfrac12 f(x_n)\right],
+  \label{eq:trap}
+\end{equation}
+\begin{equation}
+  \begin{split}
+    S_n &= \frac h3\Bigl[f(x_0)+4\!\!\sum_{\substack{i=1\\ i\ \mathrm{odd}}}^{n-1}\!\!f(x_i)\\
+        &\qquad{}+2\!\!\sum_{\substack{i=2\\ i\ \mathrm{even}}}^{n-2}\!\!f(x_i)+f(x_n)\Bigr],
+  \end{split}
+  \label{eq:simp}
+\end{equation}
+with $n$ even for \eqref{eq:simp}. Both use $N=n+1$ evaluations.
+For $f\in C^2[a,b]$ and $f\in C^4[a,b]$ respectively, the errors are bounded by $\tfrac{(b-a)h^2}{12}\max|f''|$ and $\tfrac{(b-a)h^4}{180}\max|f^{(4)}|$; hence $O(N^{-2})$ and $O(N^{-4})$.
+
+\subsection{Gauss--Legendre rule}
+The $m$-point Gauss--Legendre rule on $[-1,1]$ is
+\begin{equation}
+  G_m = \sum_{i=1}^{m} w_i\, f(t_i), \qquad w_i=\frac{2}{(1-t_i^2)\,[P_m'(t_i)]^2},
+  \label{eq:gauss}
+\end{equation}
+where $t_1,\dots,t_m$ are the roots of the Legendre polynomial $P_m$. It is mapped to $[a,b]$ by an affine change of variable and uses $N=m$ evaluations.
+
+\begin{theorem}[Error of the Gauss--Legendre rule]\label{thm:gauss}
+If $f\in C^{2m}[-1,1]$, then there is $\xi\in(-1,1)$ such that
+\begin{multline}
+  I-G_m=\frac{2^{2m+1}(m!)^4}{(2m+1)\,[(2m)!]^3}\\
+  \times f^{(2m)}(\xi).
+  \label{eq:gauss-err}
+\end{multline}
+Moreover, if $f$ is analytic in the Bernstein ellipse $E_\rho$ with foci $\pm1$ and sum of semi-axes $\rho>1$ and bounded there, then $|I-G_m|=O(\rho^{-2m})$.
+\end{theorem}
+
+The second statement is the reason why the convergence of Gauss rules is geometric for analytic integrands \citep{trefethen2013}.
+
+\section{Numerical experiments}
+\subsection{Setup}\label{sec:setup}
+We use the three integrals of Table~\ref{tab:tests}. Exact values are known in closed form and are evaluated in double precision, so that errors below about $10^{-16}$ are not meaningful. The composite rules use $n=2^k$ subintervals with $k=1,\dots,10$ (so $N=n+1\le 1025$) and the Gauss--Legendre rule uses $m=2,\dots,100$ points.
+
+\begin{table*}[t]
+  \centering
+  \caption{Test integrals and exact values.}
+  \label{tab:tests}
+  \begin{tabular}{llcl}
+    \toprule
+    Label & Integrand and interval & Exact value & Difficulty \\
+    \midrule
+    $f_1$ & $e^{-x^2}$ on $[0,1]$ & $\tfrac{\sqrt\pi}{2}\erf(1)\approx 0.746824$ & entire function \\
+    $f_2$ & $\sqrt{x}$ on $[0,1]$ & $\tfrac23$ & singular derivative at $0$ \\
+    $f_3$ & $1/(1+25x^2)$ on $[-1,1]$ & $\tfrac25\arctan 5\approx 0.549360$ & poles at $\pm i/5$ \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+\subsection{Results}
+Figure~\ref{fig:conv} shows the absolute error against $N$ for the three integrals, and Tables~\ref{tab:err} and~\ref{tab:evals} summarise the results.
+
+\pgfplotsset{
+  every axis/.append style={width=\linewidth,height=0.82\linewidth,xmode=log,ymode=log,xmin=3,xmax=1200,ymin=1e-17,ymax=2,
+    xlabel={$N$ (function evaluations)},ylabel={absolute error},grid=both,grid style={gray!25},
+    tick label style={font=\scriptsize},label style={font=\footnotesize},ytick={1e-16,1e-12,1e-8,1e-4,1}},
+  tr/.style={blue!70!black,mark=*,mark size=1.0pt,thick},
+  si/.style={red!75!black,mark=square*,mark size=1.0pt,thick},
+  ga/.style={green!50!black,mark=triangle*,mark size=1.3pt,thick},
+}
+\begin{figure*}[t]
+  \centering
+  \begin{subfigure}[t]{0.32\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[title={$f_1=e^{-x^2}$},legend columns=3,legend to name=leg,legend style={font=\small}]
+        \addplot[tr] table[col sep=comma,x=N,y=err] {data/f1_trap.csv};  \addlegendentry{trapezoidal}
+        \addplot[si] table[col sep=comma,x=N,y=err] {data/f1_simp.csv};  \addlegendentry{Simpson}
+        \addplot[ga] table[col sep=comma,x=N,y=err] {data/f1_gauss.csv}; \addlegendentry{Gauss--Legendre}
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Entire function.}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[title={$f_2=\sqrt{x}$}]
+        \addplot[tr] table[col sep=comma,x=N,y=err] {data/f2_trap.csv};
+        \addplot[si] table[col sep=comma,x=N,y=err] {data/f2_simp.csv};
+        \addplot[ga] table[col sep=comma,x=N,y=err] {data/f2_gauss.csv};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Singular derivative at $0$.}
+  \end{subfigure}\hfill
+  \begin{subfigure}[t]{0.32\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \begin{axis}[title={$f_3=1/(1+25x^2)$}]
+        \addplot[tr] table[col sep=comma,x=N,y=err] {data/f3_trap.csv};
+        \addplot[si] table[col sep=comma,x=N,y=err] {data/f3_simp.csv};
+        \addplot[ga] table[col sep=comma,x=N,y=err] {data/f3_gauss.csv};
+      \end{axis}
+    \end{tikzpicture}
+    \caption{Runge function.}
+  \end{subfigure}
+  \par\medskip
+  \ref{leg}
+  \caption{Absolute error against the number $N$ of function evaluations. Errors below $10^{-16}$ are rounding noise.}
+  \label{fig:conv}
+\end{figure*}
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \caption{Absolute error with $N=17$ evaluations ($n=16$ for the composite rules, $m=17$ for Gauss--Legendre).}
+  \label{tab:err}
+  \input{table-results.tex}
+\end{table}
+
+\begin{table}[t]
+  \centering
+  \small
+  \setlength{\tabcolsep}{4pt}
+  \caption{Smallest number of evaluations $N$ giving an absolute error below $10^{-8}$ (searched on the grids of Section~\ref{sec:setup}; ``$>$'' means not reached).}
+  \label{tab:evals}
+  \input{table-evals.tex}
+\end{table}
+
+The main observations are the following.
+\begin{enumerate}
+  \item \textbf{Entire function ($f_1$).} Least-squares fits on the last five points of each curve give orders $N^{-2.01}$ for the trapezoidal rule and $N^{-4.02}$ for Simpson's rule, as predicted. Gauss--Legendre reaches rounding level ($1.1\times10^{-16}$) already with $N=9$, while Simpson's rule needs $N=33$ to reach $10^{-8}$ (Table~\ref{tab:evals}).
+  \item \textbf{Singular derivative ($f_2$).} Both composite rules degrade to $N^{-1.50}$ and $N^{-1.51}$, since $\sqrt{x}\notin C^1[0,1]$. Gauss--Legendre also loses its fast rate but still converges as $N^{-2.9}$ (fit on $m=10,\dots,20$), consistent with the $m^{-2\alpha-2}$ behaviour known for endpoint singularities $x^{\alpha}$, here $\alpha=\tfrac12$ \citep{davis1984}. With $N=33$ points, Gauss--Legendre ($2.7\times10^{-6}$) matches what Simpson's rule achieves with $N=1025$ ($2.5\times10^{-6}$).
+  \item \textbf{Runge function ($f_3$).} For $N=9$ and $N=17$ the composite trapezoidal rule is the most accurate of the three ($1.4\times10^{-4}$ at $N=17$, against $2.7\times10^{-3}$ for Simpson and $1.2\times10^{-3}$ for Gauss--Legendre). This is a pre-asymptotic effect: the nearby poles at $\pm i/5$ delay the onset of the fast rates. From $N=33$ on the order reverses, and at $N=65$ the errors are $6.2\times10^{-12}$ (Gauss--Legendre), $9.1\times10^{-9}$ (Simpson) and $1.2\times10^{-5}$ (trapezoidal).
+\end{enumerate}
+
+For the Runge function, Theorem~\ref{thm:gauss} predicts a geometric rate $\rho^{-2m}$ with $\rho=\tfrac15+\tfrac{\sqrt{26}}{5}\approx 1.2198$, i.e.\ a factor $\rho^{-2}\approx 0.672$ per additional node. The measured error decreases from $4.55\times10^{-11}$ at $m=60$ to $1.62\times10^{-14}$ at $m=80$, which corresponds to $(1.62\times10^{-14}/4.55\times10^{-11})^{1/20}\approx 0.672$ per node, in agreement with the prediction.
+
+\section{Discussion}
+The experiments confirm the textbook picture but also qualify it.
+First, the advantage of Gauss--Legendre is largest for analytic integrands and moderate accuracy requirements: in our first example it needs $5$ evaluations against $33$ for Simpson's rule to reach $10^{-8}$, and it is the only rule to reach rounding level at a negligible cost.
+Second, when the integrand has an endpoint singularity, the \emph{order} of every rule drops, but the ranking is preserved.
+Third, the pre-asymptotic behaviour on the Runge function shows that a rule that is optimal asymptotically can be beaten by a simpler one when very few evaluations are affordable.
+
+\begin{remark}
+Gauss--Legendre nodes are not nested, so a computation with $m$ points cannot reuse its evaluations for $2m$ points, whereas the composite rules reuse all previous values when $n$ is doubled. This matters when the required accuracy is unknown in advance, and is one practical argument for composite or adaptive rules.
+\end{remark}
+
+\paragraph{Limitations.} We consider only three integrands, a single floating-point precision, and non-adaptive rules. Other approaches, such as Clenshaw--Curtis quadrature or adaptive strategies, are outside the scope of this note \citep{trefethen2008}.
+
+\section{Conclusion}
+Measured in function evaluations, Gauss--Legendre quadrature is the most efficient of the three rules on the two analytic integrands once the number of nodes is large enough, and also on the singular integrand, where it converges with a higher algebraic order. The composite Simpson rule is a robust second choice, and the trapezoidal rule can win only in a pre-asymptotic regime. The scripts and data accompanying this document allow every figure and table to be reproduced.
+
+\appendix
+\section{Reproducing the results}
+The complete script \texttt{quadrature.py} is distributed with the source. Its core consists of the three rules below.
+
+\begin{lstlisting}
+import numpy as np
+
+def trapezoid(f, a, b, n):
+    x = np.linspace(a, b, n + 1)
+    y = f(x); h = (b - a) / n
+    return h * (y[0] / 2 + y[1:-1].sum()
+                + y[-1] / 2)
+
+def simpson(f, a, b, n):   # n even
+    x = np.linspace(a, b, n + 1)
+    y = f(x); h = (b - a) / n
+    return h / 3 * (y[0] + y[-1]
+                    + 4 * y[1:-1:2].sum()
+                    + 2 * y[2:-1:2].sum())
+
+def gauss(f, a, b, m):
+    t, w = np.polynomial.legendre.leggauss(m)
+    x = 0.5 * (b - a) * t + 0.5 * (b + a)
+    return 0.5 * (b - a) * np.dot(w, f(x))
+\end{lstlisting}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
